@@ -1,0 +1,1868 @@
+<!DOCTYPE html>
+<html lang="km" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>កម្មវិធីភ្ជាប់វីដេអូខ្លីៗ - MP4 Video Merger Studio</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Kantumruy Pro for Khmer & Inter for Latin -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Inter:wght@400;500;600;700&family=Kantumruy+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Moul&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Kantumruy Pro"', '"Inter"', 'sans-serif'],
+                    },
+                    colors: {
+                        studio: {
+                            950: '#090b10',
+                            900: '#11141d',
+                            800: '#1a1f2e',
+                            700: '#262d42',
+                            600: '#37415c'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Kantumruy Pro', 'Inter', sans-serif;
+            background-color: #090b10;
+            color: #f1f5f9;
+            overflow-x: clip;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #11141d;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #262d42;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4f46e5;
+        }
+
+        /* Range Slider Styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            background: #262d42;
+            height: 6px;
+            border-radius: 999px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            margin-top: -5px;
+            background-color: #6366f1;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            transition: transform 0.15s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            background-color: #818cf8;
+        }
+
+        .canvas-checkerboard {
+            background-image: 
+                linear-gradient(45deg, #151924 25%, transparent 25%), 
+                linear-gradient(-45deg, #151924 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #151924 75%), 
+                linear-gradient(-45deg, transparent 75%, #151924 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            background-color: #0d1017;
+        }
+
+        .clip-card-active {
+            border-color: #6366f1 !important;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { border-color: rgba(99, 102, 241, 0.5); }
+            50% { border-color: rgba(236, 72, 153, 0.8); }
+        }
+        .recording-active {
+            animation: pulse-border 1.5s infinite;
+        }
+
+        @keyframes screen-rec-glow {
+            0%, 100% { opacity: 0.75; }
+            50% { opacity: 1; }
+        }
+        .fullscreen-rec-frame {
+            animation: screen-rec-glow 1.4s ease-in-out infinite;
+            will-change: opacity;
+        }
+
+        @keyframes eq-bounce {
+            0%, 100% { transform: scaleY(0.3); }
+            50% { transform: scaleY(1); }
+        }
+        .eq-bar-1 { animation: eq-bounce 0.6s ease-in-out infinite; }
+        .eq-bar-2 { animation: eq-bounce 0.45s ease-in-out infinite 0.15s; }
+        .eq-bar-3 { animation: eq-bounce 0.7s ease-in-out infinite 0.3s; }
+        .eq-bar-4 { animation: eq-bounce 0.5s ease-in-out infinite 0.1s; }
+    </style>
+</head>
+<body class="min-h-screen w-full max-w-[1920px] mx-auto flex flex-col selection:bg-indigo-500 selection:text-white bg-studio-950">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-studio-900/90 backdrop-blur-md border-b border-studio-800 sticky top-0 z-30 w-full">
+        <div class="w-full max-w-[1920px] mx-auto px-4 sm:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                    <i class="ph-fill ph-film-strip text-white text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold bg-gradient-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-transparent flex items-center gap-2">
+                        កម្មវិធីភ្ជាប់វីដេអូខ្លីៗ
+                        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-mono">1920x1080 Studio</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">ផ្ទាំងការងារកម្រិត Full HD (1920x1080) • បញ្ចូលវីដេអូច្រើនចូលគ្នាតែមួយ រួចទាញយកជា MP4</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Gemini API Key Config Button -->
+                <button type="button" onclick="openApiKeyModal()" class="px-3 py-2 rounded-xl bg-studio-800 hover:bg-studio-700 text-amber-300 border border-amber-500/30 hover:border-amber-400 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-all duration-300 hover:-translate-y-0.5 active:scale-95" title="កំណត់ Gemini API Key សម្រាប់មុខងារ AI">
+                    <i class="ph-bold ph-key text-base"></i>
+                    <span id="apiKeyBtnText">Gemini API Key</span>
+                </button>
+
+                <button id="btnFullscreenStudio" onclick="toggleStudioFullscreen()" class="px-3 py-2 rounded-xl bg-studio-800 hover:bg-studio-700 text-indigo-300 border border-indigo-500/30 hover:border-indigo-400 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-all duration-300 hover:-translate-y-0.5 active:scale-95" title="ពង្រីកផ្ទាំងកម្មវិធីពេញអេក្រង់ 1920x1080">
+                    <i id="iconFullscreenStudio" class="ph-bold ph-corners-out text-base"></i>
+                    <span class="hidden sm:inline">ពេញអេក្រង់ 1920x1080</span>
+                </button>
+
+                <button id="btnLoadSamples" onclick="generateSampleClips()" class="group px-3 py-2 rounded-xl bg-studio-800 hover:bg-studio-700 text-slate-200 border border-studio-700 hover:border-amber-500/30 text-xs sm:text-sm font-medium flex items-center gap-2 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-amber-500/10 active:scale-95 active:translate-y-0">
+                    <i class="ph ph-magic-wand text-amber-400 text-base group-hover:rotate-12 transition-transform"></i>
+                    <span>សាកល្បងវីដេអូគំរូ</span>
+                </button>
+
+                <label for="videoFileInput" class="cursor-pointer px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs sm:text-sm font-medium flex items-center gap-2 shadow-lg shadow-indigo-600/25 border border-indigo-500/50 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-indigo-500/40 active:scale-95 active:translate-y-0">
+                    <i class="ph-bold ph-plus-circle text-base"></i>
+                    <span>បន្ថែមវីដេអូ</span>
+                </label>
+                <input id="videoFileInput" type="file" accept="video/*" multiple class="hidden" onchange="handleFileSelect(event)">
+
+                <button id="btnExportMain" onclick="startMergeAndExport()" disabled class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 disabled:opacity-40 disabled:pointer-events-none text-white text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-lg shadow-emerald-600/20 border border-emerald-400/50 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-emerald-500/40 active:scale-95 active:translate-y-0">
+                    <i class="ph-bold ph-export text-base"></i>
+                    <span>ភ្ជាប់ និងទាញយក MP4</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 w-full max-w-[1920px] min-h-[1000px] mx-auto px-4 sm:px-8 py-5 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Left Column: Video Preview & Monitor -->
+        <section class="lg:col-span-7 lg:sticky lg:top-[76px] flex flex-col gap-5 z-20">
+            <div class="bg-studio-900 border border-studio-800 rounded-2xl p-4 sm:p-5 flex flex-col gap-4 shadow-xl">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <span id="statusIndicator" class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                        <h3 class="text-sm sm:text-base font-semibold text-slate-200" id="previewHeaderTitle">ផ្ទាំងមើលសាកល្បងកម្រិត 1920x1080 (Full HD Live Monitor)</h3>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs">
+                        <span id="currentClipBadge" class="px-2.5 py-1 rounded-lg bg-studio-800 text-slate-300 border border-studio-700">
+                            រង់ចាំវីដេអូ...
+                        </span>
+                        <span id="resolutionBadge" class="px-2.5 py-1 rounded-lg bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 font-mono font-semibold">
+                            1920x1080 (16:9)
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 16:9 Canvas Preview -->
+                <div id="canvasContainer" class="relative w-full aspect-video max-h-[580px] mx-auto rounded-xl canvas-checkerboard border border-studio-800 flex items-center justify-center overflow-hidden shadow-inner">
+                    <canvas id="mergerCanvas" width="1920" height="1080" class="w-full h-full object-contain shadow-2xl rounded-lg"></canvas>
+
+                    <!-- Recording Viewfinder Overlay -->
+                    <div id="recordingOverlay" class="hidden absolute inset-0 pointer-events-none z-20 flex flex-col justify-between p-4 bg-rose-950/10 border-2 border-rose-500/70 rounded-xl">
+                        <div class="flex items-center justify-between">
+                            <div class="px-3.5 py-1.5 rounded-full bg-rose-600/95 backdrop-blur-md text-white text-xs sm:text-sm font-bold flex items-center gap-2.5 shadow-xl shadow-rose-600/40 border border-rose-400/60">
+                                <span class="relative flex h-3 w-3">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-85"></span>
+                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+                                </span>
+                                <i class="ph-fill ph-video-camera text-base"></i>
+                                <span id="recordingProgressText">ឥឡូវកំពុងថត... 0%</span>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <div class="px-3 py-1 rounded-lg bg-black/75 backdrop-blur-md border border-rose-500/40 text-rose-300 font-mono text-xs font-bold flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                                    <span id="canvasRecTimecode">REC • 00:00.0</span>
+                                </div>
+                                <button type="button" onclick="cancelExportRecording()" class="pointer-events-auto px-3 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold flex items-center gap-1 shadow-lg transition-all">
+                                    <i class="ph-bold ph-stop-circle"></i>
+                                    <span>បោះបង់ការថត</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between text-[11px] text-rose-200/80 font-mono">
+                            <span>[ FULL HD 1080P CAPTURE ]</span>
+                            <span>[ AUDIO + VIDEO SYNC ]</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline Scrubber & Transport Controls -->
+                <div class="flex flex-col gap-2.5 bg-studio-950/70 p-3.5 rounded-xl border border-studio-800/80">
+                    <div class="flex items-center gap-3">
+                        <span id="currentTimeLabel" class="text-xs font-mono text-slate-300 w-14 text-right">00:00.0</span>
+                        <div class="relative flex-1 flex items-center">
+                            <input id="masterTimeline" type="range" min="0" max="100" step="0.05" value="0" disabled
+                                   oninput="seekMasterTimeline(this.value)"
+                                   class="w-full z-10">
+                        </div>
+                        <span id="totalTimeLabel" class="text-xs font-mono text-slate-400 w-14">00:00.0</span>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+                        <div class="flex items-center gap-2">
+                            <button id="btnPlay" onclick="playPreview()" disabled
+                                    class="px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 disabled:opacity-40 disabled:pointer-events-none text-white text-xs sm:text-sm font-medium flex items-center gap-1.5 border border-indigo-400/30 shadow-lg shadow-indigo-600/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-indigo-500/40 active:scale-95 active:translate-y-0">
+                                <i class="ph-fill ph-play text-base"></i>
+                                <span>ចាក់</span>
+                            </button>
+                            <button id="btnPause" onclick="pausePlayback()" disabled
+                                    class="px-3 py-2 rounded-xl bg-studio-800 hover:bg-studio-700 border border-studio-700 hover:border-slate-500/50 disabled:opacity-40 disabled:pointer-events-none text-slate-300 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg active:scale-95 active:translate-y-0">
+                                <i class="ph-fill ph-pause text-base"></i>
+                                <span>ផ្អាក</span>
+                            </button>
+                            <button id="btnStop" onclick="stopPlayback()" disabled
+                                    class="px-3 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 hover:border-rose-400/50 disabled:opacity-40 disabled:pointer-events-none transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg active:scale-95 active:translate-y-0" title="បិទ / ត្រឡប់ទៅដើមវិញ">
+                                <i class="ph-fill ph-stop-circle text-base"></i>
+                                <span>បិទ</span>
+                            </button>
+                        </div>
+
+                        <div id="timelineSegmentsBar" class="flex-1 max-w-xs h-2.5 bg-studio-800 rounded-full overflow-hidden flex gap-0.5 p-0.5">
+                            <div class="w-full h-full bg-studio-700 rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export Result Card -->
+            <div id="exportResultCard" class="hidden bg-gradient-to-br from-emerald-950/70 via-studio-900 to-studio-900 border border-emerald-500/40 rounded-2xl p-5 shadow-xl">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div class="flex items-start gap-3.5">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                            <i class="ph-fill ph-check-circle text-3xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-base font-bold text-white flex items-center gap-2">
+                                វីដេអូត្រូវបានភ្ជាប់រួចរាល់!
+                                <span id="exportFormatBadge" class="text-xs px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-mono">MP4</span>
+                            </h4>
+                            <p id="exportDetailsText" class="text-xs text-slate-300 mt-1">ទំហំ៖ -- MB • រយៈពេល៖ -- វិនាទី</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2.5 w-full sm:w-auto">
+                        <button type="button" onclick="openVideoPopupModal()"
+                           class="px-4 py-2.5 rounded-xl bg-studio-800 hover:bg-studio-700 text-indigo-300 border border-indigo-500/30 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all">
+                            <i class="ph-fill ph-play-circle text-lg"></i>
+                            <span>មើលវីដេអូ</span>
+                        </button>
+                        <a id="downloadLinkBtn" href="#" download="merged_video.mp4"
+                           class="flex-1 sm:flex-initial justify-center px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-emerald-500/25 transition-all">
+                            <i class="ph-bold ph-download-simple text-lg"></i>
+                            <span>ទាញយកវីដេអូ MP4</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Column: Upload, Clips Queue & All Controls -->
+        <section class="lg:col-span-5 flex flex-col gap-5">
+            <!-- 1. Drag & Drop Zone -->
+            <div id="dropZone" class="relative border-2 border-dashed border-studio-700 hover:border-indigo-500/80 bg-studio-900/80 hover:bg-studio-900 rounded-2xl p-4 sm:p-5 text-center transition-all duration-300 group overflow-hidden shadow-lg">
+                <input id="videoFolderInput" type="file" webkitdirectory directory multiple class="hidden" onchange="handleFolderSelect(event)">
+                <div id="dropZoneGlow" class="pointer-events-none absolute -inset-1 bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                <div class="relative z-10 flex items-center justify-between gap-2 mb-3 text-[11px]">
+                    <span class="px-2.5 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 font-medium flex items-center gap-1">
+                        <i class="ph-fill ph-sparkle text-amber-400"></i> ប្រអប់បញ្ចូលវីដេអូឆ្លាតវៃ
+                    </span>
+                    <span id="smartDropStatsBadge" class="px-2.5 py-0.5 rounded-full bg-studio-800 border border-studio-700 text-slate-400 font-mono">
+                        Ctrl+V • 0 MB
+                    </span>
+                </div>
+
+                <div onclick="document.getElementById('videoFileInput').click()" class="relative z-10 cursor-pointer py-2">
+                    <div id="dropZoneIconWrap" class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500/15 to-purple-500/15 border border-indigo-500/30 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 group-hover:border-indigo-400/60 transition-all duration-300 shadow-inner">
+                        <i id="dropZoneIcon" class="ph-duotone ph-cloud-arrow-up text-indigo-400 text-3xl group-hover:text-indigo-300 transition-colors"></i>
+                    </div>
+                    <h2 id="dropZoneTitle" class="text-sm sm:text-base font-bold text-slate-100 group-hover:text-white mb-1 transition-colors">
+                        ចុចជ្រើសរើស ឬទាញវីដេអូខ្លីៗដាក់ទីនេះ
+                    </h2>
+                    <p id="dropZoneSubtitle" class="text-xs text-slate-400 max-w-sm mx-auto">
+                        គាំទ្រ MP4, WebM, MOV • អាចទាញដាក់ទាំង <span class="text-indigo-300 font-medium">ថតឯកសារ (Folder)</span> ឬចុច <kbd class="px-1.5 py-0.5 rounded bg-studio-800 border border-studio-700 text-[10px] font-mono text-slate-300">Ctrl+V</kbd>
+                    </p>
+                </div>
+
+                <div class="relative z-10 mt-3.5 flex flex-wrap items-center justify-center gap-2">
+                    <button type="button" onclick="document.getElementById('videoFileInput').click()"
+                            class="px-3 py-1.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/35 text-indigo-200 border border-indigo-500/40 text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95">
+                        <i class="ph-bold ph-video-camera"></i>
+                        <span>ជ្រើសរើសវីដេអូ</span>
+                    </button>
+                    <button type="button" onclick="document.getElementById('videoFolderInput').click()"
+                            class="px-3 py-1.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/35 text-purple-200 border border-purple-500/40 text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95"
+                            title="បញ្ចូលវីដេអូទាំងអស់ដែលមានក្នុងថតឯកសារ (Folder) តែម្តង">
+                        <i class="ph-bold ph-folder-open"></i>
+                        <span>បញ្ចូលទាំងថត (Folder)</span>
+                    </button>
+                    <button type="button" onclick="toggleSmartImportSettings()"
+                            class="px-2.5 py-1.5 rounded-xl bg-studio-800 hover:bg-studio-700 text-slate-300 border border-studio-700 text-xs font-medium flex items-center gap-1 transition-all active:scale-95"
+                            title="កំណត់មុខងារបញ្ចូលវីដេអូឆ្លាតវៃ">
+                        <i class="ph-bold ph-sliders-horizontal text-indigo-400"></i>
+                        <span>កំណត់ឆ្លាតវៃ</span>
+                        <i id="smartImportCaret" class="ph-bold ph-caret-down text-[10px] transition-transform duration-300"></i>
+                    </button>
+                </div>
+
+                <div id="dropZoneProgressWrap" class="hidden relative z-10 mt-3.5 pt-3 border-t border-studio-800 text-left">
+                    <div class="flex items-center justify-between text-[11px] mb-1.5">
+                        <span id="dropZoneProgressLabel" class="text-indigo-300 font-medium truncate flex items-center gap-1.5">
+                            <i class="ph-bold ph-spinner animate-spin"></i> កំពុងវិភាគវីដេអូ...
+                        </span>
+                        <span id="dropZoneProgressPct" class="text-white font-mono font-bold">0%</span>
+                    </div>
+                    <div class="w-full h-2 bg-studio-950 rounded-full overflow-hidden p-0.5 border border-studio-800">
+                        <div id="dropZoneProgressBar" class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full transition-all duration-150" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div id="smartImportSettingsPanel" class="hidden relative z-10 mt-3.5 pt-3 border-t border-studio-800/90 text-left space-y-2.5">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-1 flex items-center gap-1">
+                                <i class="ph-bold ph-sort-ascending text-indigo-400"></i> តម្រៀបលំដាប់វីដេអូ៖
+                            </label>
+                            <select id="selectSmartSortOrder" onchange="applySmartSortToClips(true)" class="w-full bg-studio-950 border border-studio-700 rounded-lg px-2 py-1.5 text-[11px] text-slate-200 focus:outline-none focus:border-indigo-500">
+                                <option value="default" selected>តាមលំដាប់បញ្ចូល</option>
+                                <option value="name_asc">តាមឈ្មោះ/លេខ (1→9, A→Z)</option>
+                                <option value="name_desc">តាមឈ្មោះបញ្ច្រាស (Z→A)</option>
+                                <option value="duration_asc">វីដេអូខ្លីមុន → ទៅវែង</option>
+                                <option value="duration_desc">វីដេអូវែងមុន → ទៅខ្លី</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-slate-400 mb-1 flex items-center gap-1">
+                                <i class="ph-bold ph-scissors text-emerald-400"></i> កាត់រយៈពេលស្វ័យប្រវត្តិ៖
+                            </label>
+                            <select id="selectSmartAutoTrim" onchange="applySmartAutoTrimToExistingClips()" class="w-full bg-studio-950 border border-studio-700 rounded-lg px-2 py-1.5 text-[11px] text-slate-200 focus:outline-none focus:border-indigo-500">
+                                <option value="0" selected>រក្សារយៈពេលដើម 100%</option>
+                                <option value="3">កាត់ត្រឹម 3 វិនាទី/វីដេអូ</option>
+                                <option value="5">កាត់ត្រឹម 5 វិនាទី/វីដេអូ</option>
+                                <option value="10">កាត់ត្រឹម 10 វិនាទី/វីដេអូ</option>
+                                <option value="15">កាត់ត្រឹម 15 វិនាទី/វីដេអូ</option>
+                                <option value="30">កាត់ត្រឹម 30 វិនាទី/វីដេអូ</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px]">
+                        <label class="flex items-center gap-1.5 cursor-pointer select-none text-slate-300 hover:text-white">
+                            <input id="chkSmartSkipDuplicates" type="checkbox" checked class="w-3.5 h-3.5 rounded border-studio-600 bg-studio-800 text-indigo-600 accent-indigo-500">
+                            <span>ការពារវីដេអូស្ទួនស្វ័យប្រវត្តិ</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 cursor-pointer select-none text-slate-300 hover:text-white">
+                            <input id="chkSmartAutoAspect" type="checkbox" checked class="w-3.5 h-3.5 rounded border-studio-600 bg-studio-800 text-indigo-600 accent-indigo-500">
+                            <span>ប្តូរខ្នាតអេក្រង់តាមវីដេអូអូតូ</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Clips Queue Card -->
+            <div class="bg-studio-900 border border-studio-800 rounded-2xl flex flex-col overflow-hidden shadow-lg">
+                <div class="px-4 py-3.5 border-b border-studio-800 flex flex-wrap items-center justify-between gap-2 bg-studio-900/80">
+                    <div class="flex items-center gap-2">
+                        <i class="ph-duotone ph-queue text-indigo-400 text-xl"></i>
+                        <h3 class="font-semibold text-sm sm:text-base text-slate-200">បញ្ជីវីដេអូតាមលំដាប់</h3>
+                        <span id="clipCountBadge" class="text-xs px-2 py-0.5 rounded-full bg-studio-800 text-indigo-300 font-medium">0 វីដេអូ</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button id="btnAutoLoop" onclick="toggleAutoLoop()" class="hidden text-xs bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 hover:border-purple-400/50 px-2.5 py-1.5 rounded-lg transition-all duration-300 flex items-center gap-1.5 font-medium active:scale-95">
+                            <i id="iconAutoLoop" class="ph-bold ph-arrows-clockwise"></i>
+                            <span id="textAutoLoop">វិលជុំអូតូ</span>
+                        </button>
+                        <button id="btnExportSelected" onclick="startMergeAndExport(true)" class="hidden text-xs bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 hover:border-emerald-400/50 px-2.5 py-1.5 rounded-lg transition-all duration-300 flex items-center gap-1.5 font-medium active:scale-95">
+                            <i class="ph-bold ph-export"></i>
+                            <span id="exportSelectedText">ភ្ជាប់ដែលបានធិក (0)</span>
+                        </button>
+                        <button id="btnDeleteSelected" onclick="deleteSelectedClips()" class="hidden text-xs bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 hover:border-rose-400/50 px-2.5 py-1.5 rounded-lg transition-all duration-300 flex items-center gap-1.5 font-medium active:scale-95">
+                            <i class="ph-bold ph-trash"></i>
+                            <span id="deleteSelectedText">លុបដែលបានធិក (0)</span>
+                        </button>
+                        <button id="btnClearAll" onclick="clearAllClips()" class="hidden text-xs text-slate-400 hover:text-rose-400 px-2 py-1.5 rounded-lg hover:bg-rose-500/10 transition-all flex items-center gap-1 active:scale-95">
+                            <i class="ph ph-broom"></i> លុបទាំងអស់
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bulk Selection Sub-header -->
+                <div id="selectionToolbar" class="px-4 py-2.5 bg-studio-950/80 border-b border-studio-800/80 flex flex-col gap-2.5 text-xs">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="text-slate-300 font-medium flex items-center gap-1.5">
+                            <i class="ph-fill ph-check-square-offset text-indigo-400 text-sm"></i>
+                            <span>ធិកស្វ័យប្រវត្តិ៖</span>
+                        </span>
+                        <div class="flex flex-wrap items-center gap-1">
+                            <button type="button" onclick="setAutoCheckPreset(3)" id="btnPreset3" class="preset-check-btn px-2.5 py-1 rounded-lg bg-studio-800 hover:bg-studio-700 text-slate-300 border border-studio-700 font-semibold transition-all active:scale-95">3</button>
+                            <button type="button" onclick="setAutoCheckPreset(6)" id="btnPreset6" class="preset-check-btn px-2.5 py-1 rounded-lg bg-studio-800 hover:bg-studio-700 text-slate-300 border border-studio-700 font-semibold transition-all active:scale-95">6</button>
+                            <button type="button" onclick="setAutoCheckPreset(12)" id="btnPreset12" class="preset-check-btn px-2.5 py-1 rounded-lg bg-studio-800 hover:bg-studio-700 text-slate-300 border border-studio-700 font-semibold transition-all active:scale-95">12</button>
+                            <button type="button" onclick="setAutoCheckPreset(15)" id="btnPreset15" class="preset-check-btn px-2.5 py-1 rounded-lg bg-studio-800 hover:bg-studio-700 text-slate-300 border border-studio-700 font-semibold transition-all active:scale-95">15</button>
+                            <button type="button" onclick="setAutoCheckPreset(30)" id="btnPreset30" class="preset-check-btn px-2.5 py-1 rounded-lg bg-studio-800 hover:bg-studio-700 text-slate-300 border border-studio-700 font-semibold transition-all active:scale-95">30</button>
+                            <button type="button" onclick="setAutoCheckPreset(0)" id="btnPresetOff" title="ដកការកំណត់ធិកស្វ័យប្រវត្តិ" class="px-2 py-1 rounded-lg bg-studio-900 hover:bg-rose-500/15 text-slate-400 hover:text-rose-300 border border-studio-700/80 transition-all active:scale-95">បិទ</button>
+                        </div>
+                    </div>
+
+                    <div id="manualSelectionRow" class="hidden pt-2 border-t border-studio-800/70 flex items-center justify-between">
+                        <label class="flex items-center gap-2.5 cursor-pointer select-none text-slate-300 hover:text-white">
+                            <input id="selectAllCheckbox" type="checkbox" onchange="toggleSelectAllClips(this.checked)" class="w-4 h-4 rounded border-studio-600 bg-studio-800 text-indigo-600 focus:ring-0 cursor-pointer accent-indigo-500">
+                            <span class="font-medium">ធិកជ្រើសរើសទាំងអស់</span>
+                        </label>
+                        <span id="selectedStatusLabel" class="text-slate-400">មិនទាន់បានធិកជ្រើសរើស</span>
+                    </div>
+                </div>
+
+                <!-- Clips List Container -->
+                <div id="clipsContainer" class="p-3 space-y-3 overflow-y-auto max-h-[380px]">
+                    <div id="emptyClipsState" class="h-52 flex flex-col items-center justify-center text-center px-4">
+                        <div class="w-14 h-14 rounded-full bg-studio-800 flex items-center justify-center mb-3 text-slate-500">
+                            <i class="ph-duotone ph-video-camera-slash text-3xl"></i>
+                        </div>
+                        <p class="text-sm font-medium text-slate-300 mb-1">មិនទាន់មានវីដេអូនៅឡើយទេ</p>
+                        <p class="text-xs text-slate-500 max-w-xs mb-4">សូមបញ្ចូលវីដេអូខ្លីៗយ៉ាងតិច ១ ឬចុចប៊ូតុង "សាកល្បងវីដេអូគំរូ" ដើម្បីសាកល្បងមុខងារភ្ជាប់វីដេអូ។</p>
+                        <button onclick="generateSampleClips()" class="px-3.5 py-2 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 text-xs font-medium flex items-center gap-2 transition-all">
+                            <i class="ph-fill ph-sparkle"></i> បង្កើតវីដេអូគំរូ ៣ ភ្លាមៗ
+                        </button>
+                    </div>
+                </div>
+
+                <div class="px-4 py-3 bg-studio-950/60 border-t border-studio-800 flex items-center justify-between text-xs text-slate-400">
+                    <span>រយៈពេលសរុប៖ <strong id="totalDurationText" class="text-indigo-300 font-semibold">00:00.0</strong></span>
+                    <span class="flex items-center gap-1"><i class="ph ph-arrows-down-up"></i> អាចប្តូរលំដាប់មុន-ក្រោយបាន</span>
+                </div>
+            </div>
+
+            <!-- 3. Output & Settings Card -->
+            <div class="bg-studio-900 border border-studio-800 rounded-2xl p-4 sm:p-5 shadow-lg">
+                <div class="flex items-center gap-2 mb-4 pb-3 border-b border-studio-800">
+                    <i class="ph-duotone ph-sliders-horizontal text-indigo-400 text-xl"></i>
+                    <h3 class="font-semibold text-sm sm:text-base text-slate-200">ការកំណត់ទម្រង់វីដេអូ MP4 និងស្ទូឌីយោឆ្លាតវៃ</h3>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Aspect Ratio -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">សមាមាត្រអេក្រង់ (Aspect Ratio)</label>
+                        <select id="selectAspectRatio" onchange="updateCanvasDimensions()" class="w-full bg-studio-800 border border-studio-700 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <option value="16:9" selected>16:9 ផ្តេក (1920x1080 YouTube / FB)</option>
+                            <option value="9:16">9:16 បញ្ឈរ (1080x1920 TikTok / Reels)</option>
+                            <option value="1:1">1:1 ការ៉េ (1080x1080 Instagram / Post)</option>
+                        </select>
+                    </div>
+
+                    <!-- Resolution Quality -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">កម្រិតច្បាស់ (Quality)</label>
+                        <select id="selectQuality" onchange="updateCanvasDimensions()" class="w-full bg-studio-800 border border-studio-700 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <option value="2160">2160p 4K UHD (3840x2160 ច្បាស់កម្រិតរោងកុន)</option>
+                            <option value="1080" selected>1080p Full HD (1920x1080 ច្បាស់ខ្លាំង)</option>
+                            <option value="720">720p HD (1280x720 លឿន & ច្បាស់ល្អ)</option>
+                            <option value="1440">1440p 2K QHD (2560x1440 ច្បាស់ខ្ពស់)</option>
+                            <option value="480">480p SD (854x480 ទំហំឯកសារតូច)</option>
+                        </select>
+                    </div>
+
+                    <!-- Transition Effect -->
+                    <div class="sm:col-span-2">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-xs font-medium text-slate-400 flex items-center gap-1">
+                                <i class="ph-fill ph-sparkle text-indigo-400"></i>
+                                <span>ចលនាផ្លាស់ប្តូរវីដេអូ (Smart Transition)</span>
+                            </label>
+                            <button type="button" onclick="triggerTransitionPreview()" class="text-[10px] px-2 py-0.5 rounded-md bg-indigo-500/15 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 flex items-center gap-1 transition-all active:scale-95" title="ចុចមើលចលនាសាកល្បងលើអេក្រង់">
+                                <i class="ph-fill ph-play"></i> សាកល្បង
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <select id="selectTransition" onchange="onTransitionChange()" class="flex-1 bg-studio-800 border border-studio-700 rounded-xl px-2.5 py-2 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                                <option value="smart_auto" selected>✨ ឆ្លាតវៃស្វ័យប្រវត្តិ (Smart Auto-Mix)</option>
+                                <option value="fade">🌑 រលាយពណ៌ខ្មៅស្រទន់ (Smooth Fade)</option>
+                                <option value="flash">⚡ ពន្លឺកាមេរ៉ាភ្លឺភ្លែត (White Flash)</option>
+                                <option value="blur_zoom">🔍 ព្រាលរួចពង្រីកចូល (Blur Zoom)</option>
+                                <option value="whip_pan">💨 រុញលឿនឆ្វេង-ស្តាំ (Whip Pan)</option>
+                                <option value="slide_up">📱 រុញឡើងលើ (Reels Vertical Slide)</option>
+                                <option value="circle_wipe">⭕ រង្វង់បើកឆាក (Circle Iris Reveal)</option>
+                                <option value="split_shutter">🚪 បើកវាំងននកណ្តាល (Split Shutter)</option>
+                                <option value="spin_zoom">🌀 បង្វិលពង្រីកចូល (Spin & Zoom)</option>
+                                <option value="glitch">📺 ចលនាឌីជីថលញ័រ (Cyber Glitch)</option>
+                                <option value="zoom">🔭 ពង្រីកចូលស្រទន់ (Smooth Zoom)</option>
+                                <option value="slide">➡️ រុញចូលពីស្តាំ (Slide Left)</option>
+                                <option value="none">✂️ តភ្ជាប់ផ្ទាល់ (Direct Cut)</option>
+                            </select>
+                            <select id="selectTransitionDuration" onchange="triggerTransitionPreview()" title="រយៈពេលចលនាផ្លាស់ប្តូរ" class="w-20 bg-studio-800 border border-studio-700 rounded-xl px-2 py-2 text-xs text-indigo-300 font-mono focus:outline-none focus:border-indigo-500">
+                                <option value="0.3">0.3s</option>
+                                <option value="0.55" selected>0.5s</option>
+                                <option value="0.85">0.8s</option>
+                                <option value="1.2">1.2s</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Video Scaling Mode -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">របៀបដាក់រូបភាព (Video Fit)</label>
+                        <select id="selectScaleMode" onchange="drawCurrentFrame()" class="w-full bg-studio-800 border border-studio-700 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <option value="blur">ផ្ទៃខាងក្រោយព្រាល (Blur Background)</option>
+                            <option value="contain">ដាក់ពេញមានគែមខ្មៅ (Fit Inside)</option>
+                            <option value="cover">ពង្រីកពេញអេក្រង់ (Fill & Crop)</option>
+                        </select>
+                    </div>
+
+                    <!-- Video Speed -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5 flex items-center gap-1"><i class="ph-bold ph-magic-wand text-amber-400"></i> ល្បឿនឆ្លាតវៃ (Smart Speed)</label>
+                        <select id="selectVideoSpeed" onchange="updateTimelineControls()" class="w-full bg-studio-800 border border-studio-700 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <option value="0.5">0.5x (យឺតសន្សឹម)</option>
+                            <option value="1" selected>1.0x (ល្បឿនធម្មតា)</option>
+                            <option value="1.25">1.25x (លឿនបន្តិច)</option>
+                            <option value="1.5">1.5x (លឿនបង្គួរ)</option>
+                            <option value="2">2.0x (លឿនទ្វេដង)</option>
+                            <option value="3">3.0x (លឿនបំផុត)</option>
+                        </select>
+                    </div>
+
+                    <!-- FPS -->
+                    <div>
+                        <label class="block text-xs font-medium text-emerald-400 mb-1.5 flex items-center justify-between">
+                            <span class="flex items-center gap-1"><i class="ph-fill ph-lightning text-emerald-400"></i> ការពារភាពទាក់ (Anti-Lag FPS)</span>
+                            <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">រលូនបំផុត</span>
+                        </label>
+                        <select id="selectExportFps" class="w-full bg-studio-800 border border-emerald-500/40 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-emerald-500">
+                            <option value="30" selected>⚡ 30 FPS (រលូនបំផុត • មិនទាក់)</option>
+                            <option value="24">🎬 24 FPS (ស្តង់ដារភាពយន្ត • ស្រាលម៉ាស៊ីន)</option>
+                            <option value="60">🚀 60 FPS (កម្រិតខ្ពស់ • សម្រាប់ម៉ាស៊ីនខ្លាំង)</option>
+                        </select>
+                    </div>
+
+                    <!-- Smart Color Filter -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-xs font-medium text-slate-400 flex items-center gap-1">
+                                <i class="ph-fill ph-palette text-pink-400"></i>
+                                <span>តម្រងពណ៌ឆ្លាតវៃ (Smart Color)</span>
+                            </label>
+                            <div class="flex items-center gap-1">
+                                <button type="button" onclick="autoAnalyzeVideoColor()" class="text-[10px] px-2 py-0.5 rounded-md bg-pink-500/15 hover:bg-pink-500/30 text-pink-300 border border-pink-500/30 flex items-center gap-1 transition-all active:scale-95" title="វិភាគពន្លឺ និងកែពណ៌វីដេអូដោយស្វ័យប្រវត្តិ">
+                                    <i class="ph-fill ph-sparkle"></i> AI អូតូ
+                                </button>
+                                <button type="button" onclick="toggleColorStudio()" class="text-[10px] px-2 py-0.5 rounded-md bg-studio-800 hover:bg-studio-700 text-slate-300 border border-studio-700 flex items-center gap-1 transition-all active:scale-95" title="បើកផ្ទាំងកែពណ៌លម្អិត">
+                                    <i class="ph-bold ph-sliders"></i> លម្អិត
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <select id="selectColorFilter" onchange="onColorFilterChange()" class="flex-1 bg-studio-800 border border-studio-700 rounded-xl px-2.5 py-2 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-pink-500">
+                                <option value="none" selected>🎨 ពណ៌ដើម (Original)</option>
+                                <option value="ai_hdr">✨ ឆ្លាតវៃភ្លឺច្បាស់ (Smart AI HDR)</option>
+                                <option value="rosy">🌸 ស្បែកសផ្កាឈូក (Rosy Beauty Skin)</option>
+                                <option value="bright">☀️ ភ្លឺថ្លាត្រជាក់ភ្នែក (Bright & Airy)</option>
+                                <option value="cinematic">🎬 ភាពយន្តហូលីវូដ (Teal & Orange)</option>
+                                <option value="golden_hour">🌅 ពន្លឺថ្ងៃលិចមាស (Golden Hour)</option>
+                                <option value="k_drama">🇰🇷 ស្ទីលកូរ៉េស្រទន់ (Soft K-Drama)</option>
+                                <option value="cyberpunk">🔮 ពន្លឺ Neon រាត្រី (Cyberpunk)</option>
+                                <option value="vibrant_nature">🌿 ធម្មជាតិពណ៌ស្រស់ (Vibrant Lush)</option>
+                                <option value="vintage">🎞️ ហ្វីលបុរាណ (Vintage Film)</option>
+                                <option value="moody_dark">🌑 ងងឹតបែបអាថ៌កំបាំង (Moody Dark)</option>
+                                <option value="bw">🖤 សខ្មៅកម្រិតខ្ពស់ (Cinema Noir B&W)</option>
+                            </select>
+                            <select id="selectColorIntensity" onchange="onColorIntensityDropdownChange(this.value)" title="កម្រិតខ្លាំងនៃតម្រងពណ៌" class="w-18 bg-studio-800 border border-studio-700 rounded-xl px-2 py-2 text-xs text-pink-300 font-mono focus:outline-none focus:border-pink-500">
+                                <option value="50">50%</option>
+                                <option value="75">75%</option>
+                                <option value="100" selected>100%</option>
+                                <option value="125">125%</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- COLOR GRADING STUDIO (Collapsible) -->
+                    <div class="sm:col-span-2 bg-studio-950/75 border border-pink-500/30 rounded-2xl p-3.5 sm:p-4 shadow-inner">
+                        <div onclick="toggleColorStudio()" class="flex flex-wrap items-center justify-between gap-2 cursor-pointer select-none group" title="ចុចទីនេះដើម្បីបើក ឬលាក់ផ្ទាំងកែពណ៌">
+                            <label class="text-xs sm:text-sm font-semibold text-slate-100 flex items-center gap-2 cursor-pointer">
+                                <span class="w-6 h-6 rounded-lg bg-pink-500/20 border border-pink-500/40 flex items-center justify-center text-pink-400 transition-colors group-hover:bg-pink-500/30">
+                                    <i class="ph-fill ph-palette"></i>
+                                </span>
+                                <span class="group-hover:text-pink-400 transition-colors">ផ្ទាំងកែពណ៌ និងពន្លឺវីដេអូឆ្លាតវៃ (Smart AI Color Grading Studio)</span>
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <span id="colorStudioStatusBadge" class="text-[10px] text-slate-400 bg-studio-800 px-2 py-0.5 rounded-full border border-studio-700 font-normal">
+                                    ពណ៌ដើម (ធម្មតា)
+                                </span>
+                                <div class="w-7 h-7 rounded-lg bg-studio-800 group-hover:bg-pink-500/20 flex items-center justify-center border border-studio-700 group-hover:border-pink-500/40 transition-all">
+                                    <i id="colorStudioToggleIcon" class="ph-bold ph-caret-down text-slate-400 group-hover:text-pink-400 transition-transform duration-300"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="colorStudioContent" class="hidden mt-3 pt-3 border-t border-studio-800">
+                            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                                <div class="flex flex-wrap items-center gap-1.5">
+                                    <button type="button" onclick="autoAnalyzeVideoColor()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-pink-600/30 to-purple-600/30 hover:from-pink-500/40 hover:to-purple-500/40 text-pink-200 border border-pink-500/40 text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all active:scale-95">
+                                        <i class="ph-fill ph-sparkle text-amber-300"></i>
+                                        <span>វិភាគ និងកែពន្លឺវីដេអូស្វ័យប្រវត្តិ (AI Auto-Fix)</span>
+                                    </button>
+                                    <button type="button" id="btnSplitColorCompare" onclick="toggleSplitColorCompare()" class="px-2.5 py-1.5 rounded-xl bg-studio-800 hover:bg-studio-700 text-slate-300 border border-studio-700 text-xs font-medium flex items-center gap-1.5 transition-all active:scale-95" title="ពុះអេក្រង់ជា ២">
+                                        <i class="ph-bold ph-columns"></i>
+                                        <span id="textSplitColorCompare">ប្រៀបធៀប មុន/ក្រោយ</span>
+                                    </button>
+                                    <button type="button" onclick="resetColorGrading()" class="px-2.5 py-1.5 rounded-xl bg-studio-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-studio-700 text-xs flex items-center gap-1 transition-all" title="កំណត់ដើមវិញ">
+                                        <i class="ph-bold ph-arrow-counter-clockwise"></i> កំណត់ដើមវិញ
+                                    </button>
+                                </div>
+                                <span id="aiColorDiagnosisText" class="text-[11px] text-pink-300/90 font-medium">ជ្រើសរើសតម្រងពណ៌ ឬទាញរបារខាងក្រោម</span>
+                            </div>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 bg-studio-900/90 border border-studio-800 rounded-xl p-3">
+                                <div class="flex flex-col gap-1">
+                                    <div class="flex items-center justify-between text-[11px]">
+                                        <span class="text-slate-300 flex items-center gap-1"><i class="ph-fill ph-sliders-horizontal text-pink-400"></i> កម្រិតតម្រង</span>
+                                        <span id="valColorIntensity" class="text-pink-400 font-mono">100%</span>
+                                    </div>
+                                    <input type="range" id="sliderColorIntensity" min="0" max="150" value="100" class="w-full accent-pink-500" oninput="onColorSliderInput()">
+                                </div>
+                                <div class="flex flex-col gap-1">
+                                    <div class="flex items-center justify-between text-[11px]">
+                                        <span class="text-slate-300 flex items-center gap-1"><i class="ph-fill ph-sun text-amber-400"></i> ពន្លឺភ្លឺ</span>
+                                        <span id="valColorBrightness" class="text-amber-400 font-mono">0%</span>
+                                    </div>
+                                    <input type="range" id="sliderColorBrightness" min="-50" max="50" value="0" class="w-full accent-amber-500" oninput="onColorSliderInput()">
+                                </div>
+                                <div class="flex flex-col gap-1">
+                                    <div class="flex items-center justify-between text-[11px]">
+                                        <span class="text-slate-300 flex items-center gap-1"><i class="ph-fill ph-circle-half text-indigo-400"></i> កម្រិតដិត</span>
+                                        <span id="valColorContrast" class="text-indigo-400 font-mono">0%</span>
+                                    </div>
+                                    <input type="range" id="sliderColorContrast" min="-50" max="50" value="0" class="w-full accent-indigo-500" oninput="onColorSliderInput()">
+                                </div>
+                                <div class="flex flex-col gap-1">
+                                    <div class="flex items-center justify-between text-[11px]">
+                                        <span class="text-slate-300 flex items-center gap-1"><i class="ph-fill ph-drop text-emerald-400"></i> ពណ៌ស្រស់</span>
+                                        <span id="valColorSaturation" class="text-emerald-400 font-mono">0%</span>
+                                    </div>
+                                    <input type="range" id="sliderColorSaturation" min="-100" max="100" value="0" class="w-full accent-emerald-500" oninput="onColorSliderInput()">
+                                </div>
+                                <div class="flex flex-col gap-1">
+                                    <div class="flex items-center justify-between text-[11px]">
+                                        <span class="text-slate-300 flex items-center gap-1"><i class="ph-fill ph-thermometer text-orange-400"></i> កម្តៅពណ៌</span>
+                                        <span id="valColorWarmth" class="text-orange-400 font-mono">0%</span>
+                                    </div>
+                                    <input type="range" id="sliderColorWarmth" min="-50" max="50" value="0" class="w-full accent-orange-500" oninput="onColorSliderInput()">
+                                </div>
+                                <div class="flex flex-col gap-1">
+                                    <div class="flex items-center justify-between text-[11px]">
+                                        <span class="text-slate-300 flex items-center gap-1"><i class="ph-fill ph-frame-corners text-purple-400"></i> គែមភាពយន្ត</span>
+                                        <span id="valColorVignette" class="text-purple-400 font-mono">0%</span>
+                                    </div>
+                                    <input type="range" id="sliderColorVignette" min="0" max="100" value="0" class="w-full accent-purple-500" oninput="onColorSliderInput()">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- WATERMARK & TEXT STUDIO (Collapsible) -->
+                    <div class="sm:col-span-2 bg-studio-950/75 border border-indigo-500/30 rounded-2xl p-3.5 sm:p-4 shadow-inner">
+                        <div onclick="toggleWatermarkStudio()" class="flex flex-wrap items-center justify-between gap-2 cursor-pointer select-none group">
+                            <label class="text-xs sm:text-sm font-semibold text-slate-100 flex items-center gap-2 cursor-pointer">
+                                <span class="w-6 h-6 rounded-lg bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 transition-colors group-hover:bg-indigo-500/30">
+                                    <i class="ph-fill ph-sparkle"></i>
+                                </span>
+                                <span class="group-hover:text-indigo-400 transition-colors">ដាក់អក្សរ ឬឈ្មោះឆានែលលើវីដេអូ (Smart Text & Channel Studio)</span>
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <span id="watermarkStudioStatusBadge" class="text-[10px] text-slate-400 bg-studio-800 px-2 py-0.5 rounded-full border border-studio-700 font-normal">កំពុងបិទ</span>
+                                <div class="w-7 h-7 rounded-lg bg-studio-800 group-hover:bg-indigo-500/20 flex items-center justify-center border border-studio-700 group-hover:border-indigo-500/40 transition-all">
+                                    <i id="watermarkStudioToggleIcon" class="ph-bold ph-caret-down text-slate-400 group-hover:text-indigo-400 transition-transform duration-300"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="watermarkStudioContent" class="hidden mt-3 pt-3 border-t border-studio-800">
+                            <div class="flex flex-wrap items-center gap-1.5 mb-3">
+                                <span class="text-[11px] text-slate-400 mr-1">គំរូឆ្លាតវៃ៖</span>
+                                <button type="button" onclick="applySmartWatermarkPreset('ads')" class="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-[11px] font-medium flex items-center gap-1 transition-all active:scale-95">
+                                    <i class="ph-fill ph-megaphone"></i> ផ្សព្វផ្សាយ (Ads Ticker)
+                                </button>
+                                <button type="button" onclick="applySmartWatermarkPreset('channel')" class="px-2.5 py-1 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 text-[11px] font-medium flex items-center gap-1 transition-all active:scale-95">
+                                    <i class="ph-fill ph-bell-ringing"></i> ឈ្មោះឆានែល (Follow)
+                                </button>
+                                <button type="button" onclick="applySmartWatermarkPreset('news')" class="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-[11px] font-medium flex items-center gap-1 transition-all active:scale-95">
+                                    <i class="ph-fill ph-broadcast"></i> បដាព័ត៌មាន
+                                </button>
+                                <button type="button" onclick="applySmartWatermarkPreset('copyright')" class="px-2.5 py-1 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-300 border border-slate-600/50 text-[11px] font-medium flex items-center gap-1 transition-all active:scale-95">
+                                    <i class="ph-fill ph-shield-check"></i> រក្សាសិទ្ធិ
+                                </button>
+                                <button type="button" onclick="clearWatermarkText()" class="px-2 py-1 rounded-lg bg-studio-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-studio-700 text-[11px] flex items-center gap-1 transition-all">
+                                    <i class="ph-bold ph-eraser"></i> បិទអក្សរ
+                                </button>
+                            </div>
+
+                            <div class="grid grid-cols-1 gap-3 mb-3">
+                                <div class="flex flex-col gap-2">
+                                    <div class="relative flex items-center">
+                                        <input id="inputWatermark" type="text" placeholder="វាយបញ្ចូលអក្សរ ឬជ្រើសរើសគំរូឆ្លាតវៃ..." value="" oninput="drawCurrentFrame(); updateWatermarkStudioBadge()"
+                                               class="w-full bg-studio-900 border border-studio-700 focus:border-indigo-500 rounded-xl pl-3.5 pr-9 py-2 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none shadow-sm">
+                                        <button type="button" onclick="clearWatermarkText()" class="absolute right-2.5 text-slate-500 hover:text-slate-300" title="លុបអក្សរ">
+                                            <i class="ph-bold ph-x-circle text-base"></i>
+                                        </button>
+                                    </div>
+                                    <div class="flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                                        <div class="flex flex-wrap items-center gap-1.5">
+                                            <span class="text-slate-400 flex items-center gap-1"><i class="ph-bold ph-code text-indigo-400"></i> បញ្ចូលកូដ៖</span>
+                                            <button type="button" onclick="insertSmartTag('{clip}')" class="px-2 py-0.5 rounded bg-studio-800 hover:bg-indigo-500/20 text-indigo-300 border border-studio-700">+ ភាគទី {clip}</button>
+                                            <button type="button" onclick="insertSmartTag('{name}')" class="px-2 py-0.5 rounded bg-studio-800 hover:bg-indigo-500/20 text-indigo-300 border border-studio-700">+ ចំណងជើង {name}</button>
+                                            <button type="button" onclick="insertSmartTag('{date}')" class="px-2 py-0.5 rounded bg-studio-800 hover:bg-indigo-500/20 text-indigo-300 border border-studio-700">+ ថ្ងៃទី {date}</button>
+                                        </div>
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="text-slate-400">ស្លាកសញ្ញា៖</span>
+                                            <select id="selectWatermarkBadge" onchange="drawCurrentFrame()" class="bg-studio-800 border border-studio-700 rounded-lg px-2 py-1 text-[11px] text-slate-200 focus:outline-none focus:border-indigo-500">
+                                                <option value="none">គ្មាន</option>
+                                                <option value="megaphone" selected>📢 ផ្សព្វផ្សាយ</option>
+                                                <option value="fb">📘 Facebook</option>
+                                                <option value="tiktok">🎵 TikTok</option>
+                                                <option value="yt">▶️ YouTube</option>
+                                                <option value="tg">✈️ Telegram</option>
+                                                <option value="phone">📞 ទូរស័ព្ទ</option>
+                                                <option value="live">🔴 LIVE</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-studio-900/90 border border-studio-800 rounded-xl p-2.5 flex flex-col justify-between">
+                                    <div class="flex items-center justify-between text-[11px] text-slate-400 mb-1.5">
+                                        <span>ទីតាំងឆ្លាតវៃ (អាចអូសលើអេក្រង់បាន)៖</span>
+                                        <span id="posLabelHint" class="text-indigo-400 font-medium">ក្រោម-ស្តាំ</span>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-1">
+                                        <button type="button" onclick="snapWatermarkPosition('top-left')" class="py-1 rounded bg-studio-800 hover:bg-indigo-600/30 border border-studio-700 text-[10px] text-slate-300">↖ លើឆ្វេង</button>
+                                        <button type="button" onclick="snapWatermarkPosition('top-center')" class="py-1 rounded bg-studio-800 hover:bg-indigo-600/30 border border-studio-700 text-[10px] text-slate-300">↑ លើកណ្តាល</button>
+                                        <button type="button" onclick="snapWatermarkPosition('top-right')" class="py-1 rounded bg-studio-800 hover:bg-indigo-600/30 border border-studio-700 text-[10px] text-slate-300">↗ លើស្តាំ</button>
+                                        <button type="button" onclick="snapWatermarkPosition('middle-left')" class="py-1 rounded bg-studio-800 hover:bg-indigo-600/30 border border-studio-700 text-[10px] text-slate-300">← ឆ្វេង</button>
+                                        <button type="button" onclick="snapWatermarkPosition('center')" class="py-1 rounded bg-studio-800 hover:bg-indigo-600/30 border border-studio-700 text-[10px] text-indigo-300 font-semibold">❖ កណ្តាល</button>
+                                        <button type="button" onclick="snapWatermarkPosition('middle-right')" class="py-1 rounded bg-studio-800 hover:bg-indigo-600/30 border border-studio-700 text-[10px] text-slate-300">ស្តាំ →</button>
+                                        <button type="button" onclick="snapWatermarkPosition('bottom-left')" class="py-1 rounded bg-studio-800 hover:bg-indigo-600/30 border border-studio-700 text-[10px] text-slate-300">↙ ក្រោមឆ្វេង</button>
+                                        <button type="button" onclick="snapWatermarkPosition('bottom-center')" class="py-1 rounded bg-studio-800 hover:bg-indigo-600/30 border border-studio-700 text-[10px] text-slate-300">↓ ក្រោមកណ្តាល</button>
+                                        <button type="button" onclick="snapWatermarkPosition('bottom-right')" class="py-1 rounded bg-studio-800 hover:bg-indigo-600/30 border border-studio-700 text-[10px] text-slate-300">↘ ក្រោមស្តាំ</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2.5 border-t border-studio-800/80">
+                                <div>
+                                    <label class="block text-[10px] text-slate-400 mb-1">ពុម្ពអក្សរ</label>
+                                    <select id="selectWatermarkFont" onchange="drawCurrentFrame()" class="w-full bg-studio-800 border border-studio-700 rounded-lg px-2 py-1.5 text-xs text-slate-200">
+                                        <option value='"Kantumruy Pro", sans-serif'>Kantumruy Pro</option>
+                                        <option value='"Battambang", sans-serif'>បាត់ដំបង</option>
+                                        <option value='"Moul", serif'>មួល (Moul)</option>
+                                        <option value='"Inter", sans-serif'>អង់គ្លេស (Inter)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] text-slate-400 mb-1">ចលនា</label>
+                                    <select id="watermarkAnimation" onchange="resetAnimationTimer(); drawCurrentFrame()" class="w-full bg-studio-800 border border-studio-700 rounded-lg px-2 py-1.5 text-xs text-slate-200">
+                                        <option value="marquee_bar" selected>រត់ក្នុងរបារពាណិជ្ជកម្ម</option>
+                                        <option value="marquee">អក្សររត់កាត់អណ្តែត</option>
+                                        <option value="static">នៅស្ងៀម</option>
+                                        <option value="bounce">លោតតិចៗ</option>
+                                        <option value="pulse">ពង្រីករួញ</option>
+                                        <option value="typewriter">វាយអក្សរ</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] text-slate-400 mb-1">ល្បឿន</label>
+                                    <select id="watermarkAnimationSpeed" onchange="drawCurrentFrame()" class="w-full bg-studio-800 border border-studio-700 rounded-lg px-2 py-1.5 text-xs text-slate-200">
+                                        <option value="0.5">0.5x</option>
+                                        <option value="1.0" selected>1.0x</option>
+                                        <option value="1.6">1.6x</option>
+                                        <option value="2.5">2.5x</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] text-slate-400 mb-1">ពេលបង្ហាញ</label>
+                                    <select id="selectWatermarkTiming" onchange="drawCurrentFrame()" class="w-full bg-studio-800 border border-studio-700 rounded-lg px-2 py-1.5 text-xs text-slate-200">
+                                        <option value="always" selected>បង្ហាញគ្រប់ពេល</option>
+                                        <option value="periodic">រៀងរាល់ ៥ វិនាទី</option>
+                                        <option value="intro_outro">ដើម & ចុង</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] text-slate-400 mb-1">ទំហំ</label>
+                                    <select id="selectWatermarkSize" onchange="drawCurrentFrame()" class="w-full bg-studio-800 border border-studio-700 rounded-lg px-2 py-1.5 text-xs text-slate-200">
+                                        <option value="0.65">តូច</option>
+                                        <option value="0.85">មធ្យម</option>
+                                        <option value="1.0" selected>ធម្មតា</option>
+                                        <option value="1.35">ធំ</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] text-slate-400 mb-1">ស្ទីល</label>
+                                    <select id="selectWatermarkEffect" onchange="drawCurrentFrame()" class="w-full bg-studio-800 border border-studio-700 rounded-lg px-2 py-1.5 text-xs text-slate-200">
+                                        <option value="shadow" selected>ស្រមោល</option>
+                                        <option value="outline">គែមខ្មៅ</option>
+                                        <option value="neon">ពន្លឺ Neon</option>
+                                        <option value="gold">គែមមាស</option>
+                                        <option value="none">ធម្មតា</option>
+                                    </select>
+                                </div>
+                                <div class="col-span-2 sm:col-span-3">
+                                    <label class="block text-[10px] text-slate-400 mb-1">ពណ៌ & ផ្ទៃក្រោយ</label>
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex items-center gap-1.5 bg-studio-800 border border-studio-700 rounded-lg px-2.5 py-1">
+                                            <span class="text-[10px] font-bold text-slate-300">ពណ៌អក្សរ</span>
+                                            <input type="color" id="colorWatermarkText" value="#ffffff" oninput="drawCurrentFrame()" class="w-5 h-5 rounded cursor-pointer bg-transparent border-0 p-0">
+                                        </div>
+                                        <div class="flex items-center gap-1.5 bg-studio-800 border border-studio-700 rounded-lg px-2.5 py-1">
+                                            <span class="text-[10px] text-slate-300">ផ្ទៃក្រោយ</span>
+                                            <input type="color" id="colorWatermarkBg" value="#090b10" oninput="drawCurrentFrame()" class="w-5 h-5 rounded cursor-pointer bg-transparent border-0 p-0">
+                                        </div>
+                                        <select id="selectWatermarkBgOpacity" onchange="drawCurrentFrame()" class="flex-1 bg-studio-800 border border-studio-700 rounded-lg px-2 py-1.5 text-xs text-slate-200">
+                                            <option value="0.0">ថ្លា 0%</option>
+                                            <option value="0.4">ថ្លា 40%</option>
+                                            <option value="0.75" selected>ថ្លា 75%</option>
+                                            <option value="0.95">ថ្លា 95%</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CHROMA KEY STUDIO -->
+                    <div class="sm:col-span-2 bg-studio-950/75 border border-rose-500/30 rounded-2xl p-3.5 sm:p-4 shadow-inner">
+                        <div onclick="toggleChromaStudio()" class="flex flex-wrap items-center justify-between gap-2 cursor-pointer select-none group">
+                            <label class="text-xs sm:text-sm font-semibold text-slate-100 flex items-center gap-2 cursor-pointer">
+                                <span class="w-6 h-6 rounded-lg bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400">
+                                    <i class="ph-fill ph-magic-wand"></i>
+                                </span>
+                                <span class="group-hover:text-rose-400 transition-colors">លុប និងប្តូរផ្ទៃខាងក្រោយឆ្លាតវៃ (Smart Chroma Key Studio)</span>
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <span id="chromaStatusBadge" class="text-[10px] text-slate-400 bg-studio-800 px-2 py-0.5 rounded-full border border-studio-700 font-normal">កំពុងបិទ</span>
+                                <div class="w-7 h-7 rounded-lg bg-studio-800 group-hover:bg-rose-500/20 flex items-center justify-center border border-studio-700 transition-all">
+                                    <i id="chromaStudioToggleIcon" class="ph-bold ph-caret-down text-slate-400 group-hover:text-rose-400 transition-transform duration-300"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="chromaStudioContent" class="hidden mt-3 pt-3 border-t border-studio-800">
+                            <div class="flex flex-wrap items-center gap-1.5 mb-3">
+                                <button type="button" id="btnChromaEyedropper" onclick="toggleChromaEyedropper()" class="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-[11px] font-medium flex items-center gap-1.5 transition-all">
+                                    <i class="ph-bold ph-eyedropper"></i>
+                                    <span id="textChromaEyedropper">បឺតពណ៌ពីលើវីដេអូ</span>
+                                </button>
+                                <button type="button" onclick="autoDetectChromaColor()" class="px-2.5 py-1 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 text-[11px] font-medium flex items-center gap-1.5 transition-all">
+                                    <i class="ph-bold ph-sparkle"></i>
+                                    <span>រកពណ៌ស្វ័យប្រវត្តិ</span>
+                                </button>
+                                <button type="button" onclick="resetChromaSettings()" class="px-2 py-1 rounded-lg bg-studio-800 hover:bg-studio-700 text-slate-400 hover:text-slate-200 border border-studio-700 text-[11px] transition-all">
+                                    <i class="ph-bold ph-arrow-counter-clockwise"></i> បិទ
+                                </button>
+                            </div>
+
+                            <div class="grid grid-cols-1 gap-3.5">
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[11px] text-slate-400 font-medium flex items-center justify-between">
+                                        <span>ពណ៌ត្រូវលុប (Key Color)៖</span>
+                                        <span id="chromaHexLabel" class="text-[10px] font-mono text-rose-300">#00FF00</span>
+                                    </label>
+                                    <div class="flex items-center gap-1.5">
+                                        <select id="selectBgRemoval" onchange="onChromaModeChange()" class="flex-1 bg-studio-800 border border-studio-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none">
+                                            <option value="none" selected>បិទ (None)</option>
+                                            <option value="green">ផ្ទៃបៃតង (Green Screen)</option>
+                                            <option value="blue">ផ្ទៃខៀវ (Blue Screen)</option>
+                                            <option value="black">ផ្ទៃខ្មៅ (Black Screen)</option>
+                                            <option value="white">ផ្ទៃស (White Screen)</option>
+                                            <option value="custom">ពណ៌ផ្ទាល់ខ្លួន (Custom)</option>
+                                        </select>
+                                        <div class="flex items-center bg-studio-800 border border-studio-700 rounded-xl p-1">
+                                            <input type="color" id="chromaCustomColor" value="#00ff00" oninput="onCustomChromaColorInput()" class="w-6 h-6 rounded cursor-pointer bg-transparent border-0 p-0">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-3 gap-2.5 bg-studio-900/90 border border-studio-800 rounded-xl p-2.5">
+                                    <div class="flex flex-col gap-1">
+                                        <div class="flex items-center justify-between text-[10px]">
+                                            <span class="text-slate-300">កម្រិតលុប</span>
+                                            <span id="valBgTolerance" class="text-rose-400 font-mono">35%</span>
+                                        </div>
+                                        <input type="range" id="bgTolerance" min="1" max="100" value="35" class="w-full accent-rose-500" oninput="document.getElementById('valBgTolerance').textContent = this.value + '%'; drawCurrentFrame()">
+                                    </div>
+                                    <div class="flex flex-col gap-1">
+                                        <div class="flex items-center justify-between text-[10px]">
+                                            <span class="text-slate-300">រំលាយគែម</span>
+                                            <span id="valBgSmoothness" class="text-indigo-400 font-mono">25%</span>
+                                        </div>
+                                        <input type="range" id="bgSmoothness" min="0" max="100" value="25" class="w-full accent-indigo-500" oninput="document.getElementById('valBgSmoothness').textContent = this.value + '%'; drawCurrentFrame()">
+                                    </div>
+                                    <div class="flex flex-col gap-1">
+                                        <div class="flex items-center justify-between text-[10px]">
+                                            <span class="text-slate-300">បំបាត់ពន្លឺ</span>
+                                            <span id="valBgSpill" class="text-emerald-400 font-mono">40%</span>
+                                        </div>
+                                        <input type="range" id="bgSpill" min="0" max="100" value="40" class="w-full accent-emerald-500" oninput="document.getElementById('valBgSpill').textContent = this.value + '%'; drawCurrentFrame()">
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[11px] text-slate-400 font-medium flex items-center justify-between">
+                                        <span>ផ្ទៃខាងក្រោយថ្មីជំនួស៖</span>
+                                    </label>
+                                    <div class="flex items-center gap-1.5">
+                                        <select id="selectChromaBgReplace" onchange="onChromaBgReplaceChange()" class="flex-1 bg-studio-800 border border-studio-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-200">
+                                            <option value="blur" selected>ព្រាលវីដេអូដើម (Blur)</option>
+                                            <option value="gradient_cyber">ស្ទូឌីយោ Cyber</option>
+                                            <option value="gradient_sunset">ស្ទូឌីយោ Sunset</option>
+                                            <option value="gradient_emerald">ស្ទូឌីយោ Emerald</option>
+                                            <option value="solid">ពណ៌លាត (Solid)</option>
+                                            <option value="image">រូបភាពផ្ទៃក្រោយ (Image)</option>
+                                            <option value="black">ផ្ទៃខ្មៅសុទ្ធ (Black)</option>
+                                        </select>
+                                        <div id="chromaReplaceColorWrap" class="hidden items-center bg-studio-800 border border-studio-700 rounded-xl p-1">
+                                            <input type="color" id="chromaReplaceSolidColor" value="#1e1b4b" oninput="drawCurrentFrame()" class="w-6 h-6 rounded cursor-pointer bg-transparent border-0 p-0">
+                                        </div>
+                                        <label id="chromaReplaceImgWrap" class="hidden cursor-pointer px-2.5 py-1.5 rounded-xl bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 text-xs items-center gap-1 shrink-0">
+                                            <i class="ph-bold ph-image"></i>
+                                            <span id="chromaBgImgLabel" class="max-w-[70px] truncate">រូបភាព</span>
+                                            <input type="file" id="chromaBgImgInput" accept="image/*" class="hidden" onchange="handleChromaBgImageUpload(event)">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BANNER & LOGO STUDIO -->
+                    <div class="sm:col-span-2 bg-studio-950/75 border border-emerald-500/30 rounded-2xl p-3.5 sm:p-4 shadow-inner">
+                        <div onclick="toggleBannerStudio()" class="flex flex-wrap items-center justify-between gap-2 cursor-pointer select-none group">
+                            <label class="text-xs sm:text-sm font-semibold text-slate-100 flex items-center gap-2 cursor-pointer">
+                                <span class="w-6 h-6 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+                                    <i class="ph-fill ph-image-square"></i>
+                                </span>
+                                <span class="group-hover:text-emerald-400 transition-colors">រូបភាព Banner និងឡូហ្គោឆ្លាតវៃ (Smart Banner Studio)</span>
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <span id="bannerStudioStatusBadge" class="text-[10px] text-slate-400 bg-studio-800 px-2 py-0.5 rounded-full border border-studio-700 font-normal">កំពុងបិទ</span>
+                                <div class="w-7 h-7 rounded-lg bg-studio-800 group-hover:bg-emerald-500/20 flex items-center justify-center border border-studio-700 transition-all">
+                                    <i id="bannerStudioToggleIcon" class="ph-bold ph-caret-down text-slate-400 group-hover:text-emerald-400 transition-transform duration-300"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="bannerStudioContent" class="hidden mt-3 pt-3 border-t border-studio-800">
+                            <div class="flex flex-wrap items-center gap-1.5 mb-3">
+                                <button type="button" onclick="applySmartBannerPreset('subscribe')" class="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-[11px] font-medium flex items-center gap-1 transition-all active:scale-95">
+                                    <i class="ph-fill ph-youtube-logo"></i> Subscribe
+                                </button>
+                                <button type="button" onclick="applySmartBannerPreset('follow')" class="px-2.5 py-1 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 text-[11px] font-medium flex items-center gap-1 transition-all active:scale-95">
+                                    <i class="ph-fill ph-thumbs-up"></i> Follow & Like
+                                </button>
+                                <button type="button" onclick="applySmartBannerPreset('promo')" class="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-[11px] font-medium flex items-center gap-1 transition-all active:scale-95">
+                                    <i class="ph-fill ph-seal-percent"></i> ស្លាកប្រូម៉ូសិន
+                                </button>
+                                <button type="button" onclick="applySmartBannerPreset('studio_hd')" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-[11px] font-medium flex items-center gap-1 transition-all active:scale-95">
+                                    <i class="ph-fill ph-television"></i> ឡូហ្គោ HD
+                                </button>
+                                <button type="button" onclick="clearBanner()" class="px-2 py-1 rounded-lg bg-studio-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-studio-700 text-[11px] flex items-center gap-1 transition-all">
+                                    <i class="ph-bold ph-trash"></i> លុប
+                                </button>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 bg-studio-900/90 border border-studio-800 rounded-xl p-2.5 mb-3">
+                                <div class="flex flex-col justify-between gap-1.5">
+                                    <span class="text-[11px] text-slate-400 font-medium flex items-center gap-1">
+                                        <i class="ph-bold ph-upload-simple text-emerald-400"></i> បញ្ចូលរូបភាពផ្ទាល់ខ្លួន៖
+                                    </span>
+                                    <label class="w-full cursor-pointer bg-studio-800 hover:bg-studio-700 border border-emerald-500/30 rounded-xl px-3 py-2 text-xs text-center transition-all flex items-center justify-center gap-2">
+                                        <i class="ph-fill ph-folder-open text-emerald-400 text-base shrink-0"></i>
+                                        <span id="bannerFileName" class="text-slate-200 font-medium truncate">ជ្រើសរើសរូបភាព (PNG/JPG)...</span>
+                                        <input type="file" id="bannerFileInput" accept="image/*" class="hidden" onchange="handleBannerUpload(event)">
+                                    </label>
+                                </div>
+                                <div class="flex flex-col justify-between gap-1.5">
+                                    <span class="text-[11px] text-slate-400 font-medium">លុបផ្ទៃក្រោយឡូហ្គោ៖</span>
+                                    <select id="selectBannerCutout" onchange="updateProcessedBanner(); drawCurrentFrame()" class="w-full bg-studio-800 border border-studio-700 rounded-xl px-2.5 py-2 text-xs text-slate-200">
+                                        <option value="none" selected>ទុកផ្ទៃដើម (Original)</option>
+                                        <option value="white">លុបផ្ទៃពណ៌ស (Remove White)</option>
+                                        <option value="black">លុបផ្ទៃពណ៌ខ្មៅ (Remove Black)</option>
+                                        <option value="green">លុបផ្ទៃបៃតង (Remove Green)</option>
+                                    </select>
+                                </div>
+                                <div class="sm:col-span-2 grid grid-cols-2 gap-3 pt-1">
+                                    <div class="flex flex-col gap-0.5">
+                                        <div class="flex items-center justify-between text-[10px]">
+                                            <span class="text-slate-300">ទំហំរូប</span>
+                                            <span id="valBannerSize" class="text-emerald-400 font-mono">100%</span>
+                                        </div>
+                                        <input type="range" id="selectBannerSize" min="0.25" max="2.5" step="0.05" value="1.0" class="w-full accent-emerald-500" oninput="document.getElementById('valBannerSize').textContent = Math.round(this.value * 100) + '%'; drawCurrentFrame()">
+                                    </div>
+                                    <div class="flex flex-col gap-0.5">
+                                        <div class="flex items-center justify-between text-[10px]">
+                                            <span class="text-slate-300">កម្រិតថ្លា</span>
+                                            <span id="valBannerOpacity" class="text-indigo-400 font-mono">100%</span>
+                                        </div>
+                                        <input type="range" id="selectBannerOpacity" min="0.15" max="1.0" step="0.05" value="1.0" class="w-full accent-indigo-500" oninput="document.getElementById('valBannerOpacity').textContent = Math.round(this.value * 100) + '%'; drawCurrentFrame()">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI CAPTIONS & TRANSLATION STUDIO -->
+                    <div class="sm:col-span-2 bg-studio-950/75 border border-blue-500/30 rounded-2xl p-3.5 sm:p-4 shadow-inner">
+                        <div onclick="toggleCaptionsStudio()" class="flex flex-wrap items-center justify-between gap-2 cursor-pointer select-none group">
+                            <label class="text-xs sm:text-sm font-semibold text-slate-100 flex items-center gap-2 cursor-pointer">
+                                <span class="w-6 h-6 rounded-lg bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-400">
+                                    <i class="ph-fill ph-subtitles"></i>
+                                </span>
+                                <span class="group-hover:text-blue-400 transition-colors">វិភាគសំឡេងពីវីដេអូ (AI Transcribe) • បកប្រែ & សំឡេង AI</span>
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <span id="captionsStatusBadge" class="text-[10px] text-slate-400 bg-studio-800 px-2 py-0.5 rounded-full border border-studio-700 font-normal">មិនទាន់វិភាគ</span>
+                                <div class="w-7 h-7 rounded-lg bg-studio-800 group-hover:bg-blue-500/20 flex items-center justify-center border border-studio-700 transition-all">
+                                    <i id="captionsStudioToggleIcon" class="ph-bold ph-caret-down text-slate-400 group-hover:text-blue-400 transition-transform duration-300"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="captionsStudioContent" class="hidden mt-3 pt-3 border-t border-studio-800">
+                            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <button type="button" id="btnAnalyzeVideoAudio" onclick="analyzeUploadedVideosAudio(false)" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white border border-blue-400/40 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-lg active:scale-95">
+                                        <i class="ph-fill ph-waveform text-base"></i>
+                                        <span>វិភាគសំឡេងពីវីដេអូ (AI Transcribe)</span>
+                                    </button>
+                                    <button type="button" id="btnTranslateTranscriptMain" onclick="translateTranscribedText(false)" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white border border-cyan-400/40 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-lg active:scale-95">
+                                        <i class="ph-fill ph-translate text-base"></i>
+                                        <span>បកប្រែភាសា (AI Translate)</span>
+                                    </button>
+                                    <button type="button" id="btnGenerateAiVoiceMain" onclick="generateAiVoiceFromTranscript()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white border border-purple-400/40 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-lg active:scale-95">
+                                        <i class="ph-fill ph-speaker-high text-base"></i>
+                                        <span>បង្កើតសំឡេង AI (Voiceover)</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 gap-3 mb-3">
+                                <div class="bg-studio-900 border border-studio-700 rounded-xl p-2.5 min-h-[115px] max-h-[180px] overflow-y-auto" id="captionSegmentsListContainer">
+                                    <p id="liveCaptionPreview" class="text-xs text-slate-400 text-center my-auto py-4">
+                                        សូមផ្ទុកវីដេអូចូល រួចចុចប៊ូតុង <strong class="text-blue-300">"វិភាគសំឡេងពីវីដេអូ"</strong>
+                                    </p>
+                                </div>
+                                <textarea id="fullTranscriptTextarea" rows="3" oninput="onManualTranscriptEdit(this.value)" placeholder="អត្ថបទនិយាយដែលវិភាគបានពីវីដេអូនឹងបង្ហាញនៅទីនេះ..." class="w-full bg-studio-900 border border-studio-700 focus:border-blue-500 rounded-xl p-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none resize-none leading-relaxed"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mute & Turbo Anti-Lag -->
+                    <div class="sm:col-span-2 flex flex-col gap-2.5 bg-studio-950/50 border border-studio-800/80 rounded-xl px-4 py-3">
+                        <label class="flex items-center gap-2.5 cursor-pointer select-none text-slate-300 hover:text-white">
+                            <input id="muteExportCheckbox" type="checkbox" checked class="w-4 h-4 rounded border-studio-600 bg-studio-800 text-indigo-600 accent-indigo-500">
+                            <span class="text-xs font-medium">បិទសំឡេងរំខានពេលកំពុងភ្ជាប់វីដេអូ (នៅរក្សាសំឡេងក្នុង MP4)</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer select-none text-emerald-300 hover:text-emerald-200 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-lg w-fit">
+                            <input id="chkTurboAntiLag" type="checkbox" checked class="w-4 h-4 rounded border-emerald-600 bg-studio-800 text-emerald-500 accent-emerald-500">
+                            <span class="text-xs font-semibold flex items-center gap-1">
+                                <i class="ph-fill ph-cpu"></i> បើកមុខងារបំបាត់ភាពទាក់ (Turbo Anti-Lag Engine)
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Gemini API Key Modal -->
+    <div id="apiKeyModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-studio-900 border border-studio-700 rounded-2xl w-full max-w-md p-5 flex flex-col gap-4 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-studio-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center">
+                        <i class="ph-bold ph-key text-lg"></i>
+                    </div>
+                    <h3 class="font-bold text-base text-white">កំណត់ Google Gemini API Key</h3>
+                </div>
+                <button type="button" onclick="closeApiKeyModal()" class="text-slate-400 hover:text-white">
+                    <i class="ph-bold ph-x text-lg"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed">
+                បញ្ចូល API Key របស់អ្នកដើម្បីដំណើរការមុខងារឆ្លាតវៃ (AI Transcribe, Translate & Voiceover)។ Key ត្រូវបានរក្សាទុកតែក្នុង Browser របស់អ្នក (localStorage) ដោយសុវត្ថិភាព។
+            </p>
+            <div class="flex flex-col gap-1.5">
+                <label class="text-xs text-slate-300 font-medium">Gemini API Key៖</label>
+                <input id="apiKeyInput" type="password" placeholder="AIzaSy..." class="w-full bg-studio-950 border border-studio-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400 font-mono">
+            </div>
+            <div class="flex items-center justify-end gap-2 pt-2">
+                <button type="button" onclick="closeApiKeyModal()" class="px-3.5 py-2 rounded-xl bg-studio-800 hover:bg-studio-700 text-slate-300 text-xs">
+                    បោះបង់
+                </button>
+                <button type="button" onclick="saveApiKey()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-amber-500/25">
+                    <i class="ph-bold ph-check"></i>
+                    <span>រក្សាទុក</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Popup Modal -->
+    <div id="videoPopupModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 transition-opacity duration-300">
+        <div class="bg-studio-900 border border-studio-700 rounded-2xl w-full max-w-5xl overflow-hidden shadow-2xl flex flex-col">
+            <div class="px-4 sm:px-6 py-3.5 bg-studio-950/90 border-b border-studio-800 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <span id="popupModalStatusDot" class="w-3 h-3 rounded-full bg-rose-500 animate-ping"></span>
+                    <div>
+                        <h3 id="popupModalTitle" class="text-sm sm:text-base font-bold text-white flex items-center gap-2">កំពុងថត និងភ្ជាប់វីដេអូ...</h3>
+                        <p id="popupModalSubtitle" class="text-[11px] sm:text-xs text-slate-400">ផ្ទាំងបង្ហាញវីដេអូផ្ទាល់ (Live Studio Monitor)</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="popupModalBadge" class="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-mono font-semibold">REC • 0%</span>
+                    <button type="button" onclick="closeVideoPopupModal()" class="p-2 rounded-xl bg-studio-800 hover:bg-studio-700 text-slate-300 hover:text-white transition-all">
+                        <i class="ph-bold ph-x text-base"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="relative w-full aspect-video max-h-[68vh] bg-black canvas-checkerboard flex items-center justify-center overflow-hidden">
+                <video id="popupVideoPlayer" playsinline class="w-full h-full object-contain"></video>
+            </div>
+
+            <div id="popupFinishedActions" class="p-4 bg-studio-900 border-t border-studio-800 flex items-center justify-end gap-3">
+                <button type="button" onclick="replayPopupVideo()" class="px-3.5 py-2 rounded-xl bg-studio-800 hover:bg-studio-700 text-slate-200 text-xs font-medium">ចាក់ម្តងទៀត</button>
+                <a id="popupDownloadBtn" href="#" download="merged_video.mp4" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5">
+                    <i class="ph-bold ph-download-simple"></i> ទាញយក MP4
+                </a>
+                <button type="button" onclick="closeVideoPopupModal()" class="px-3.5 py-2 rounded-xl bg-studio-800 text-slate-300 text-xs">បិទ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden audio element for AI Voiceover -->
+    <audio id="aiVoiceAudioPlayer" class="hidden"></audio>
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+    <div id="hiddenVideoPool" class="hidden"></div>
+
+    <script>
+        // Global State
+        let clips = [];
+        let activeClipIndex = 0;
+        let autoCheckCount = 0;
+        let isPlaying = false;
+        let isExporting = false;
+        let animationFrameId = null;
+        let isAutoLooping = false;
+        let isCaptionsEnabled = false;
+        let isAnalyzingVideoAudio = false;
+        let isTranslatingTranscript = false;
+        let speechRecognition = null;
+        let currentCaptionText = "";
+        let captionTimeout = null;
+
+        let isPickingChromaColor = false;
+        let isSplitColorCompare = false;
+        let chromaReplaceImg = null;
+        let transitionPreviewState = { active: false, startTime: 0 };
+        const segmentColors = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#14b8a6', '#f43f5e', '#84cc16'];
+        const smartAutoTransitionPool = ['fade', 'blur_zoom', 'whip_pan', 'slide_up', 'zoom', 'circle_wipe', 'glitch'];
+
+        const smartColorPresets = {
+            none: { name: 'ពណ៌ដើម (Original)', brightness: 0, contrast: 0, saturate: 0, sepia: 0, hue: 0, grayscale: 0, vignette: 0, tint: null },
+            ai_hdr: { name: 'ឆ្លាតវៃភ្លឺច្បាស់', brightness: 6, contrast: 12, saturate: 18, sepia: 0, hue: 0, grayscale: 0, vignette: 12, tint: null },
+            rosy: { name: 'ស្បែកសផ្កាឈូក', brightness: 8, contrast: 5, saturate: 12, sepia: 5, hue: -5, grayscale: 0, vignette: 0, tint: 'rgba(253,164,175,0.1)', blend: 'soft-light' },
+            bright: { name: 'ភ្លឺថ្លាត្រជាក់ភ្នែក', brightness: 12, contrast: -5, saturate: 10, sepia: 0, hue: 0, grayscale: 0, vignette: 0, tint: 'rgba(224,242,254,0.1)', blend: 'overlay' },
+            cinematic: { name: 'ភាពយន្តហូលីវូដ', brightness: -5, contrast: 15, saturate: 5, sepia: 15, hue: -10, grayscale: 0, vignette: 25, tint: 'rgba(15,118,110,0.15)', blend: 'overlay' },
+            golden_hour: { name: 'ពន្លឺថ្ងៃលិចមាស', brightness: 5, contrast: 10, saturate: 20, sepia: 25, hue: 0, grayscale: 0, vignette: 15, tint: 'rgba(217,119,6,0.15)', blend: 'overlay' },
+            k_drama: { name: 'ស្ទីលកូរ៉េស្រទន់', brightness: 10, contrast: -10, saturate: 5, sepia: 0, hue: 5, grayscale: 0, vignette: 0, tint: 'rgba(244,114,182,0.05)', blend: 'soft-light' },
+            cyberpunk: { name: 'ពន្លឺ Neon រាត្រី', brightness: -10, contrast: 25, saturate: 30, sepia: 0, hue: 15, grayscale: 0, vignette: 30, tint: 'rgba(139,92,246,0.15)', blend: 'overlay' },
+            vibrant_nature: { name: 'ធម្មជាតិពណ៌ស្រស់', brightness: 5, contrast: 10, saturate: 35, sepia: 0, hue: 5, grayscale: 0, vignette: 10, tint: 'rgba(34,197,94,0.1)', blend: 'overlay' },
+            vintage: { name: 'ហ្វីលបុរាណ', brightness: -5, contrast: -15, saturate: -20, sepia: 40, hue: 0, grayscale: 0, vignette: 35, tint: 'rgba(217,119,6,0.1)', blend: 'overlay' },
+            moody_dark: { name: 'ងងឹតបែបអាថ៌កំបាំង', brightness: -20, contrast: 20, saturate: -10, sepia: 10, hue: 0, grayscale: 0, vignette: 40, tint: 'rgba(15,23,42,0.2)', blend: 'overlay' },
+            bw: { name: 'សខ្មៅកម្រិតខ្ពស់', brightness: 0, contrast: 25, saturate: -100, sepia: 0, hue: 0, grayscale: 100, vignette: 20, tint: null }
+        };
+
+        // Audio & Recording Context
+        let audioCtx = null;
+        let exportAudioDest = null;
+        let silentOscillator = null;
+        let masterSpeakerGain = null;
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let exportedBlobUrl = null;
+        let isExportCancelled = false;
+
+        let isGeneratingAiVoice = false;
+        let aiVoiceBlobUrl = null;
+        let aiVoiceConnected = false;
+        let aiVoiceSourceNode = null;
+        let aiVoiceGainNode = null;
+
+        // Overlay & Canvas State
+        let watermarkPos = { x: null, y: null };
+        let watermarkSnapMode = 'bottom-right';
+        let isDraggingWatermark = false;
+        let wmDragOffsetX = 0, wmDragOffsetY = 0;
+        let currentWmBox = { x: 0, y: 0, w: 0, h: 0 };
+
+        let bannerPos = { x: null, y: null };
+        let bannerSnapMode = 'top-left';
+        let isDraggingBanner = false;
+        let bannerDragOffsetX = 0, bannerDragOffsetY = 0;
+        let currentBannerBox = { x: 0, y: 0, w: 0, h: 0 };
+        let processedBannerCanvas = null;
+        let bannerImg = null;
+
+        let captionPos = { x: null, y: null };
+        let captionSnapMode = 'bottom-center';
+        let isDraggingCaption = false;
+        let captionDragOffsetX = 0, captionDragOffsetY = 0;
+        let currentCaptionBox = { x: 0, y: 0, w: 0, h: 0 };
+
+        const canvas = document.getElementById('mergerCanvas');
+        const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+        const fastBlurCanvas = document.createElement('canvas');
+        fastBlurCanvas.width = 160;
+        fastBlurCanvas.height = 90;
+        const fastBlurCtx = fastBlurCanvas.getContext('2d', { alpha: false });
+
+        let globalRenderTime = 0;
+        let lastRealTime = performance.now();
+
+        // API Key Helpers
+        function getGeminiApiKey() {
+            return localStorage.getItem('GEMINI_STUDIO_API_KEY') || '';
+        }
+
+        function openApiKeyModal() {
+            const modal = document.getElementById('apiKeyModal');
+            const input = document.getElementById('apiKeyInput');
+            if (modal) modal.classList.remove('hidden');
+            if (input) {
+                input.value = getGeminiApiKey();
+                input.focus();
+            }
+        }
+
+        function closeApiKeyModal() {
+            const modal = document.getElementById('apiKeyModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function saveApiKey() {
+            const input = document.getElementById('apiKeyInput');
+            const val = input ? input.value.trim() : '';
+            localStorage.setItem('GEMINI_STUDIO_API_KEY', val);
+            closeApiKeyModal();
+            updateApiKeyBtnStatus();
+            showToast('បានរក្សាទុក Gemini API Key ជោគជ័យ!', 'success');
+        }
+
+        function updateApiKeyBtnStatus() {
+            const btnText = document.getElementById('apiKeyBtnText');
+            if (!btnText) return;
+            const key = getGeminiApiKey();
+            if (key) {
+                btnText.textContent = 'API Key (បានភ្ជាប់ ✓)';
+            } else {
+                btnText.textContent = 'Gemini API Key';
+            }
+        }
+
+        function resetAnimationTimer() {
+            globalRenderTime = 0;
+            lastRealTime = performance.now();
+        }
+
+        function toggleStudioFullscreen() {
+            const icon = document.getElementById('iconFullscreenStudio');
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().then(() => {
+                    if (icon) icon.className = 'ph-bold ph-corners-in text-base';
+                }).catch(() => {});
+            } else {
+                document.exitFullscreen().then(() => {
+                    if (icon) icon.className = 'ph-bold ph-corners-out text-base';
+                }).catch(() => {});
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const colorMap = {
+                info: 'bg-studio-800 border-indigo-500/50 text-slate-100',
+                success: 'bg-emerald-950/90 border-emerald-500/60 text-emerald-100',
+                warning: 'bg-amber-950/90 border-amber-500/60 text-amber-100',
+                error: 'bg-rose-950/90 border-rose-500/60 text-rose-100'
+            };
+            const iconMap = {
+                info: 'ph-info text-indigo-400',
+                success: 'ph-check-circle text-emerald-400',
+                warning: 'ph-warning text-amber-400',
+                error: 'ph-warning-circle text-rose-400'
+            };
+            toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border shadow-xl backdrop-blur-md text-xs sm:text-sm transition-all duration-300 transform translate-y-2 opacity-0 ${colorMap[type] || colorMap.info}`;
+            toast.innerHTML = `<i class="ph-fill ${iconMap[type] || iconMap.info} text-xl shrink-0"></i><span class="flex-1 font-medium">${message}</span>`;
+            container.appendChild(toast);
+            requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3800);
+        }
+
+        // Unified Captions Badge updater (Fix for duplicate bug)
+        function updateCaptionsBadge(status, styleMode = 'idle') {
+            const badge = document.getElementById('captionsStatusBadge');
+            if (!badge) return;
+
+            if (typeof status === 'boolean') {
+                if (status) {
+                    badge.textContent = 'កំពុងស្តាប់ (Listening...)';
+                    badge.className = 'text-[10px] text-blue-300 bg-blue-500/15 px-2 py-0.5 rounded-full border border-blue-500/30 font-medium animate-pulse';
+                } else {
+                    badge.textContent = 'កំពុងបិទ';
+                    badge.className = 'text-[10px] text-slate-400 bg-studio-800 px-2 py-0.5 rounded-full border border-studio-700 font-normal';
+                }
+                return;
+            }
+
+            badge.textContent = status;
+            if (styleMode === 'active') {
+                badge.className = 'text-[10px] text-blue-300 bg-blue-500/15 px-2 py-0.5 rounded-full border border-blue-500/30 font-medium animate-pulse';
+            } else if (styleMode === 'done') {
+                badge.className = 'text-[10px] text-emerald-300 bg-emerald-500/15 px-2 py-0.5 rounded-full border border-emerald-500/30 font-medium';
+            } else {
+                badge.className = 'text-[10px] text-slate-400 bg-studio-800 px-2 py-0.5 rounded-full border border-studio-700 font-normal';
+            }
+        }
+
+        // UI Collapsible toggles
+        function toggleColorStudio() {
+            const content = document.getElementById('colorStudioContent');
+            const icon = document.getElementById('colorStudioToggleIcon');
+            if (!content) return;
+            content.classList.toggle('hidden');
+            if (icon) icon.classList.toggle('rotate-180');
+        }
+
+        function toggleWatermarkStudio() {
+            const content = document.getElementById('watermarkStudioContent');
+            const icon = document.getElementById('watermarkStudioToggleIcon');
+            if (!content) return;
+            content.classList.toggle('hidden');
+            if (icon) icon.classList.toggle('rotate-180');
+        }
+
+        function toggleChromaStudio() {
+            const content = document.getElementById('chromaStudioContent');
+            const icon = document.getElementById('chromaStudioToggleIcon');
+            if (!content) return;
+            content.classList.toggle('hidden');
+            if (icon) icon.classList.toggle('rotate-180');
+        }
+
+        function toggleBannerStudio() {
+            const content = document.getElementById('bannerStudioContent');
+            const icon = document.getElementById('bannerStudioToggleIcon');
+            if (!content) return;
+            content.classList.toggle('hidden');
+            if (icon) icon.classList.toggle('rotate-180');
+        }
+
+        function toggleCaptionsStudio() {
+            const content = document.getElementById('captionsStudioContent');
+            const icon = document.getElementById('captionsStudioToggleIcon');
+            if (!content) return;
+            content.classList.toggle('hidden');
+            if (icon) icon.classList.toggle('rotate-180');
+        }
+
+        function toggleSmartImportSettings() {
+            const panel = document.getElementById('smartImportSettingsPanel');
+            const caret = document.getElementById('smartImportCaret');
+            if (!panel) return;
+            panel.classList.toggle('hidden');
+            if (caret) caret.classList.toggle('rotate-180');
+        }
+
+        // Helpers
+        function getGlobalSpeed() {
+            const val = parseFloat(document.getElementById('selectVideoSpeed')?.value || '1');
+            return isFinite(val) && val > 0 ? val : 1;
+        }
+
+        function getTotalMergedDuration() {
+            const speed = getGlobalSpeed();
+            return clips.reduce((acc, c) => acc + Math.max(0.2, (c.trimEnd - c.trimStart) / speed), 0);
+        }
+
+        function formatTime(seconds) {
+            if (!isFinite(seconds) || seconds < 0) return '00:00.0';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            const tenths = Math.floor((seconds % 1) * 10);
+            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${tenths}`;
+        }
+
+        function ensureAudioContext() {
+            if (!audioCtx) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContextClass();
+                exportAudioDest = audioCtx.createMediaStreamDestination();
+                masterSpeakerGain = audioCtx.createGain();
+                masterSpeakerGain.connect(audioCtx.destination);
+                silentOscillator = audioCtx.createOscillator();
+                const silentGain = audioCtx.createGain();
+                silentGain.gain.value = 0.00001;
+                silentOscillator.connect(silentGain);
+                silentGain.connect(exportAudioDest);
+                silentOscillator.start();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function attachVideoToAudioGraph(clipObj) {
+            ensureAudioContext();
+            if (clipObj.audioConnected) return;
+            try {
+                const sourceNode = audioCtx.createMediaElementSource(clipObj.videoEl);
+                const gainNode = audioCtx.createGain();
+                gainNode.gain.value = clipObj.muted ? 0 : clipObj.volume;
+                sourceNode.connect(gainNode);
+                gainNode.connect(masterSpeakerGain);
+                gainNode.connect(exportAudioDest);
+                clipObj.sourceNode = sourceNode;
+                clipObj.gainNode = gainNode;
+                clipObj.audioConnected = true;
+            } catch (err) {
+                console.warn('Audio graph fallback:', err);
+            }
+        }
+
+        function updateCanvasDimensions() {
+            const ratio = document.getElementById('selectAspectRatio')?.value || '16:9';
+            const quality = parseInt(document.getElementById('selectQuality')?.value || '1080', 10);
+            let w = 1920, h = 1080;
+            if (ratio === '16:9') {
+                h = quality;
+                w = Math.round((quality * 16) / 9);
+            } else if (ratio === '9:16') {
+                w = quality;
+                h = Math.round((quality * 16) / 9);
+            } else if (ratio === '1:1') {
+                w = quality;
+                h = quality;
+            }
+            w = w % 2 === 0 ? w : w + 1;
+            h = h % 2 === 0 ? h : h + 1;
+            canvas.width = w;
+            canvas.height = h;
+            document.getElementById('resolutionBadge').textContent = `${w}x${h} (${ratio})`;
+            drawCurrentFrame();
+        }
+
+        function drawIdleScreen() {
+            const cw = canvas.width, ch = canvas.height;
+            const grad = ctx.createLinearGradient(0, 0, cw, ch);
+            grad.addColorStop(0, '#090b10');
+            grad.addColorStop(0.5, '#111422');
+            grad.addColorStop(1, '#1a1025');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, cw, ch);
+
+            ctx.fillStyle = '#e2e8f0';
+            ctx.font = `bold ${Math.max(20, Math.round(ch * 0.038))}px "Kantumruy Pro", sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('ផ្ទាំងមើលវីដេអូសាកល្បងកម្រិត Full HD Studio', cw / 2, ch / 2 - 20);
+
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = `500 ${Math.max(14, Math.round(ch * 0.024))}px "Kantumruy Pro", sans-serif`;
+            ctx.fillText('សូមបន្ថែមវីដេអូខ្លីៗ ឬចុចប៊ូតុង "សាកល្បងវីដេអូគំរូ" ដើម្បីចាប់ផ្តើម', cw / 2, ch / 2 + 25);
+        }
+
+        function drawCurrentFrame() {
+            if (clips.length === 0) {
+                drawIdleScreen();
+                return;
+            }
+            const clip = clips[activeClipIndex] || clips[0];
+            if (!clip || !clip.videoEl) {
+                drawIdleScreen();
+                return;
+            }
+            const v = clip.videoEl;
+            const cw = canvas.width, ch = canvas.height;
+            const vw = clip.width || v.videoWidth || 1920;
+            const vh = clip.height || v.videoHeight || 1080;
+
+            const scaleMode = document.getElementById('selectScaleMode')?.value || 'blur';
+            if (scaleMode === 'blur') {
+                fastBlurCtx.drawImage(v, 0, 0, fastBlurCanvas.width, fastBlurCanvas.height);
+                ctx.drawImage(fastBlurCanvas, 0, 0, cw, ch);
+                ctx.fillStyle = 'rgba(9, 11, 16, 0.4)';
+                ctx.fillRect(0, 0, cw, ch);
+            } else {
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, cw, ch);
+            }
+
+            const drawScale = scaleMode === 'cover' ? Math.max(cw / vw, ch / vh) : Math.min(cw / vw, ch / vh);
+            const dw = vw * drawScale;
+            const dh = vh * drawScale;
+            const dx = (cw - dw) / 2;
+            const dy = (ch - dh) / 2;
+
+            ctx.drawImage(v, dx, dy, dw, dh);
+        }
+
+        function generateSampleClips() {
+            if (isExporting) return;
+            stopPlayback();
+            showToast('កំពុងបង្កើតវីដេអូគំរូ...', 'info');
+
+            const sCanvas = document.createElement('canvas');
+            sCanvas.width = 640;
+            sCanvas.height = 360;
+            const sCtx = sCanvas.getContext('2d');
+            const stream = sCanvas.captureStream(30);
+            let rec = new MediaRecorder(stream);
+            const chunks = [];
+            rec.ondataavailable = e => chunks.push(e.data);
+            rec.onstop = () => {
+                const blob = new Blob(chunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                const video = document.createElement('video');
+                video.src = url;
+                video.onloadedmetadata = () => {
+                    clips.push({
+                        id: 'clip_' + Date.now(),
+                        name: 'Sample_1080p.mp4',
+                        url: url,
+                        videoEl: video,
+                        width: 1920,
+                        height: 1080,
+                        rawDuration: 3,
+                        trimStart: 0,
+                        trimEnd: 3,
+                        volume: 1,
+                        muted: false,
+                        selected: true,
+                        thumbUrl: sCanvas.toDataURL('image/jpeg', 0.6),
+                        captions: [{ start: 0, end: 3, text: 'វីដេអូគំរូស្ទូឌីយោ' }]
+                    });
+                    renderClipsList();
+                    updateTimelineControls();
+                    drawCurrentFrame();
+                    showToast('បង្កើតវីដេអូគំរូរួចរាល់!', 'success');
+                };
+            };
+            rec.start();
+            let f = 0;
+            const int = setInterval(() => {
+                sCtx.fillStyle = f % 2 === 0 ? '#4f46e5' : '#7c3aed';
+                sCtx.fillRect(0, 0, 640, 360);
+                sCtx.fillStyle = '#ffffff';
+                sCtx.font = 'bold 30px "Kantumruy Pro", sans-serif';
+                sCtx.textAlign = 'center';
+                sCtx.fillText('វីដេអូគំរូ Full HD', 320, 180);
+                f++;
+                if (f > 40) {
+                    clearInterval(int);
+                    rec.stop();
+                }
+            }, 33);
+        }
+
+        function handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            if (files.length === 0) return;
+            files.forEach(file => {
+                const url = URL.createObjectURL(file);
+                const video = document.createElement('video');
+                video.src = url;
+                video.onloadedmetadata = () => {
+                    const dur = Math.max(0.5, video.duration || 3);
+                    clips.push({
+                        id: 'clip_' + Date.now() + Math.random(),
+                        name: file.name,
+                        url: url,
+                        videoEl: video,
+                        width: video.videoWidth || 1920,
+                        height: video.videoHeight || 1080,
+                        rawDuration: dur,
+                        trimStart: 0,
+                        trimEnd: dur,
+                        volume: 1,
+                        muted: false,
+                        selected: true,
+                        thumbUrl: '',
+                        captions: []
+                    });
+                    renderClipsList();
+                    updateTimelineControls();
+                    drawCurrentFrame();
+                };
+            });
+            event.target.value = '';
+            showToast(`បានបញ្ចូលវីដេអូ ${files.length} ជោគជ័យ!`, 'success');
+        }
+
+        function renderClipsList() {
+            const container = document.getElementById('clipsContainer');
+            const badge = document.getElementById('clipCountBadge');
+            const btnClear = document.getElementById('btnClearAll');
+            const btnExportMain = document.getElementById('btnExportMain');
+
+            if (badge) badge.textContent = `${clips.length} វីដេអូ`;
+            if (btnClear) btnClear.classList.toggle('hidden', clips.length === 0);
+            if (btnExportMain) btnExportMain.disabled = clips.length === 0 || isExporting;
+
+            if (clips.length === 0) {
+                container.innerHTML = `
+                    <div id="emptyClipsState" class="h-52 flex flex-col items-center justify-center text-center px-4">
+                        <div class="w-14 h-14 rounded-full bg-studio-800 flex items-center justify-center mb-3 text-slate-500">
+                            <i class="ph-duotone ph-video-camera-slash text-3xl"></i>
+                        </div>
+                        <p class="text-sm font-medium text-slate-300 mb-1">មិនទាន់មានវីដេអូនៅឡើយទេ</p>
+                        <button onclick="generateSampleClips()" class="px-3.5 py-2 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 text-xs font-medium flex items-center gap-2">
+                            <i class="ph-fill ph-sparkle"></i> បង្កើតវីដេអូគំរូ
+                        </button>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            clips.forEach((clip, idx) => {
+                const card = document.createElement('div');
+                card.className = `p-2.5 rounded-xl bg-studio-950 border border-studio-800 flex items-center justify-between gap-2.5`;
+                card.innerHTML = `
+                    <div class="flex items-center gap-2 flex-1 min-w-0">
+                        <span class="w-6 h-6 rounded-md bg-indigo-500/20 text-indigo-300 font-mono text-xs flex items-center justify-center font-bold">#${idx + 1}</span>
+                        <div class="truncate">
+                            <p class="text-xs font-semibold text-slate-200 truncate">${clip.name}</p>
+                            <span class="text-[11px] text-slate-400 font-mono">${clip.rawDuration.toFixed(1)}s • ${clip.width}x${clip.height}</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="removeSingleClip(${idx})" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-400">
+                        <i class="ph-bold ph-trash"></i>
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function removeSingleClip(idx) {
+            clips.splice(idx, 1);
+            renderClipsList();
+            updateTimelineControls();
+            drawCurrentFrame();
+        }
+
+        function clearAllClips() {
+            clips = [];
+            renderClipsList();
+            updateTimelineControls();
+            drawIdleScreen();
+            showToast('បានសម្អាតវីដេអូទាំងអស់', 'info');
+        }
+
+        function updateTimelineControls() {
+            const total = getTotalMergedDuration();
+            document.getElementById('totalDurationText').textContent = formatTime(total);
+            document.getElementById('totalTimeLabel').textContent = formatTime(total);
+            const masterTimeline = document.getElementById('masterTimeline');
+            if (masterTimeline) {
+                masterTimeline.max = Math.max(0.1, total);
+                masterTimeline.disabled = clips.length === 0;
+            }
+            const btnPlay = document.getElementById('btnPlay');
+            const btnPause = document.getElementById('btnPause');
+            const btnStop = document.getElementById('btnStop');
+            if (btnPlay) btnPlay.disabled = clips.length === 0 || isPlaying;
+            if (btnPause) btnPause.disabled = !isPlaying;
+            if (btnStop) btnStop.disabled = clips.length === 0;
+        }
+
+        function playPreview() {
+            if (clips.length === 0) return;
+            isPlaying = true;
+            updateTimelineControls();
+            const clip = clips[0];
+            clip.videoEl.currentTime = 0;
+            clip.videoEl.play();
+            const step = () => {
+                if (!isPlaying) return;
+                drawCurrentFrame();
+                document.getElementById('currentTimeLabel').textContent = formatTime(clip.videoEl.currentTime);
+                document.getElementById('masterTimeline').value = clip.videoEl.currentTime;
+                if (clip.videoEl.ended) {
+                    stopPlayback();
+                    return;
+                }
+                requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+        }
+
+        function pausePlayback() {
+            isPlaying = false;
+            clips.forEach(c => c.videoEl && c.videoEl.pause());
+            updateTimelineControls();
+        }
+
+        function stopPlayback() {
+            isPlaying = false;
+            clips.forEach(c => c.videoEl && c.videoEl.pause());
+            if (clips[0]) clips[0].videoEl.currentTime = 0;
+            updateTimelineControls();
+            drawCurrentFrame();
+        }
+
+        function openVideoPopupModal() {
+            document.getElementById('videoPopupModal').classList.remove('hidden');
+        }
+
+        function closeVideoPopupModal() {
+            document.getElementById('videoPopupModal').classList.add('hidden');
+        }
+
+        function replayPopupVideo() {
+            const p = document.getElementById('popupVideoPlayer');
+            if (p) {
+                p.currentTime = 0;
+                p.play();
+            }
+        }
+
+        async function startMergeAndExport() {
+            if (clips.length === 0 || isExporting) return;
+            isExporting = true;
+            document.getElementById('recordingOverlay').classList.remove('hidden');
+
+            const stream = canvas.captureStream(30);
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+            recordedChunks = [];
+            mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
+            mediaRecorder.onstop = () => {
+                isExporting = false;
+                document.getElementById('recordingOverlay').classList.add('hidden');
+                const blob = new Blob(recordedChunks, { type: 'video/mp4' });
+                exportedBlobUrl = URL.createObjectURL(blob);
+                document.getElementById('exportResultCard').classList.remove('hidden');
+                document.getElementById('downloadLinkBtn').href = exportedBlobUrl;
+                document.getElementById('popupVideoPlayer').src = exportedBlobUrl;
+                document.getElementById('popupDownloadBtn').href = exportedBlobUrl;
+                showToast('ភ្ជាប់វីដេអូរួចរាល់!', 'success');
+            };
+
+            mediaRecorder.start();
+            showToast('កំពុងថត និងភ្ជាប់វីដេអូ...', 'info');
+
+            for (let i = 0; i < clips.length; i++) {
+                const clip = clips[i];
+                activeClipIndex = i;
+                clip.videoEl.currentTime = clip.trimStart;
+                await new Promise(resolve => {
+                    clip.videoEl.onended = resolve;
+                    clip.videoEl.play();
+                    const loop = () => {
+                        if (!isExporting) return;
+                        drawCurrentFrame();
+                        if (clip.videoEl.currentTime >= clip.trimEnd || clip.videoEl.ended) {
+                            clip.videoEl.pause();
+                            resolve();
+                        } else {
+                            requestAnimationFrame(loop);
+                        }
+                    };
+                    requestAnimationFrame(loop);
+                });
+            }
+
+            mediaRecorder.stop();
+        }
+
+        function cancelExportRecording() {
+            isExporting = false;
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            document.getElementById('recordingOverlay').classList.add('hidden');
+            showToast('បានបោះបង់ការថត!', 'warning');
+        }
+
+        // Drag & Drop & Window Load
+        function setupDragAndDrop() {
+            const dz = document.getElementById('dropZone');
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => {
+                dz.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); });
+            });
+            dz.addEventListener('drop', e => {
+                const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('video/'));
+                if (files.length > 0) handleFileSelect({ target: { files } });
+            });
+        }
+
+        window.onload = function() {
+            setupDragAndDrop();
+            updateCanvasDimensions();
+            updateApiKeyBtnStatus();
+            drawIdleScreen();
+        };
+    </script>
+</body>
+</html>
